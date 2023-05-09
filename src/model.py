@@ -26,8 +26,8 @@ def model(params, x):
 
 
 def loss_fn(params, x, y):
-    preds = model(params, x)
-    return -jnp.mean(y * jnp.log(preds))
+    pred = model(params, x)  # batch_size x image_dim
+    return -jnp.mean(y * jnp.log(pred) + (1 - y) * jnp.log(1 - pred))
 
 
 def predict(params, x):  
