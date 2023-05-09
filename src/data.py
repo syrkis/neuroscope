@@ -16,24 +16,23 @@ from sklearn.model_selection import train_test_split
 
 
 # batch_loader
-def get_loaders(config, args):
+def get_loaders(config, args):  # TODO: allow for loading and mixing multiple subjects
     batch_size, image_size = config['batch_size'], config['image_size']
     subject, n = args.subject, args.n
+    _, _, img_files = get_files(args.subject)
+    train_idxs, test_idxs = train_test_split(np.arange(len(img_files)), test_size=0.2)
     meta_data = get_meta_data()
-    meta_data.to_csv(os.path.join(DATA_DIR, 'meta_data.csv'))
-    train_loader = get_loader(subject, batch_size, 'train', image_size, meta_data, n)
-    val_loader = get_loader(subject, batch_size, 'val', image_size, meta_data, n)
-    test_loader = get_loader(subject, batch_size, 'test', image_size, meta_data, n)
-    return train_loader, val_loader, test_loader
+    train_loader = get_loader(subject, batch_size, image_size, meta_data, n, train_idxs)
+    test_loader = get_loader(subject, batch_size, image_size, meta_data, n, test_idxs)
+    return train_loader, test_loader
 
 
 # get batch for subject. TODO: make subject mixed batches. fmri dimensions might be subject specific.
-def get_loader(subject, batch_size, split, image_size, meta_data, n):
+def get_loader(subject, batch_size, image_size, meta_data, n, idxs):
     _, _, image_files = get_files(subject)
     n = n if n else len(image_files)
     # lh, rh = np.load(lh_file), np.load(rh_file)
-    split_idxs = set(get_split_idxs(split, meta_data))
-    image_files = [f for f in image_files if file_name_has_valid_coco_id(f, split_idxs)]  # I think this is right, but fuuuck
+    image_files = [image_files[i] for i in idxs]
     if n < len(image_files):
         image_files = random.sample(image_files, n)
     images = []

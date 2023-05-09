@@ -10,10 +10,12 @@ from src import get_args, get_config, get_loaders
 def main():
     args = get_args()
     config = get_config()
-    train_loader, val_loader, test_loader = get_loaders(config, args)
+    train_loader, test_loader = get_loaders(config, args)
     img, cat, sup, cap = next(train_loader)
     print(img.shape, cat.shape, sup.shape, cap.shape)
-    
+    img, cat, sup, cap = next(test_loader)
+    print(img.shape, cat.shape, sup.shape, cap.shape)
+
 
 
 # run main()
