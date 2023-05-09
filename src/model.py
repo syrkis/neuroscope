@@ -66,6 +66,7 @@ def predict(params, x):
     return (preds > 0.5).astype(int)
 
 
-conv = lambda x, w, d: jax.lax.conv_general_dilated(x, w, [1 for _ in range(d)], padding='SAME')
+stride = (1, 2, 2, 1)
+conv = lambda x, w, d: jax.lax.conv_general_dilated(x, w, (1, 2, 2, 1), padding='SAME')
 conv2d = lambda x, w: conv(x, w, 2)
 conv3d = lambda x, w: conv(x, w, 3)

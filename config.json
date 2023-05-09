@@ -1,4 +1,8 @@
 {
-    "image_size": 32,
-    "hidden_layer_sizes": [64, 128, 256]
+    "input_image_size": [3, 32, 32],
+    "ourput_size": 80,
+    "hidden_layer_sizes": {
+        "cnn" : [[8, 3, 4], [16, 8, 4], [32, 16, 4]],
+        "mlp" : [1000, 1000, 1000]
+    }
 }
