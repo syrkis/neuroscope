@@ -20,11 +20,13 @@ def get_loaders(config, args):  # TODO: allow for loading and mixing multiple su
     batch_size, image_size = config['batch_size'], config['image_size']
     subject, n = args.subject, args.n
     _, _, img_files = get_files(args.subject)
-    train_idxs, test_idxs = train_test_split(np.arange(len(img_files)), test_size=0.2)
+    train_idxs, test_idxs = train_test_split(range(len(img_files)), test_size=0.2, random_state=42)
+    train_idxs, val_idxs = train_test_split(train_idxs, test_size=0.2, random_state=42)
     meta_data = get_meta_data()
     train_loader = get_loader(subject, batch_size, image_size, meta_data, n, train_idxs)
+    val_loader = get_loader(subject, batch_size, image_size, meta_data, n, val_idxs)
     test_loader = get_loader(subject, batch_size, image_size, meta_data, n, test_idxs)
-    return train_loader, test_loader
+    return train_loader, val_loader, test_loader
 
 
 # get batch for subject. TODO: make subject mixed batches. fmri dimensions might be subject specific.

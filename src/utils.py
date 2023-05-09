@@ -18,13 +18,22 @@ TRAIN_CAT_FILE = os.path.join(COCO_DIR, 'instances_train2017.json')
 VAL_CAT_FILE = os.path.join(COCO_DIR, 'instances_val2017.json')
 TRAIN_CAP_FILE = os.path.join(COCO_DIR, 'captions_train2017.json')
 VAL_CAP_FILE = os.path.join(COCO_DIR, 'captions_val2017.json')
-coco = COCO(VAL_CAT_FILE)
-cats = coco.loadCats(coco.getCatIds())
 
+make_cats = False
+
+if make_cats:
+    coco = COCO(VAL_CAT_FILE)
+    cats = coco.loadCats(coco.getCatIds())
+    with open(os.path.join(DATA_DIR, 'coco_cats.json'), 'w') as f:
+        json.dump(cats, f)
+
+
+with open(os.path.join(DATA_DIR, 'coco_cats.json'), 'r') as f:
+    cat_data_for_dict = json.load(f)
 
 # dictionaries for coco stuff and nsd stuff
-cat_id_to_name = {cat['id']: cat['name'] for cat in cats}
-cat_name_to_id = {cat['name']: cat['id'] for cat in cats}
+cat_id_to_name = {cat['id']: cat['name'] for cat in cat_data_for_dict}
+cat_name_to_id = {cat['name']: cat['id'] for cat in cat_data_for_dict}
 coco_cat_id_to_vec_index = {cat_id: i for i, cat_id in enumerate(cat_id_to_name.keys())}
 vec_index_to_coco_cat_id = {i: cat_id for i, cat_id in enumerate(cat_id_to_name.keys())}
 
@@ -55,4 +64,5 @@ def get_args():
 def get_config():
     with open(os.path.join(ROOT_DIR, 'config.json')) as f:
         config = json.load(f)
+        config['layer_sizes'] = [config['image_size'] ** 2] + config['hidden_layer_sizes'] + [len(cat_id_to_name)]
     return config

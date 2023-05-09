@@ -1,5 +1,7 @@
 {
+    "lr": 0.001,
     "batch_size": 32,
-    "num_steps": 100,
-    "image_size": 32
+    "n_steps": 100,
+    "image_size": 32,
+    "hidden_layer_sizes": [64, 128, 256]
 }
