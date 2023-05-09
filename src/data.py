@@ -16,21 +16,20 @@ from sklearn.model_selection import train_test_split
 
 
 # batch_loader
-def get_loaders(config, args):  # TODO: allow for loading and mixing multiple subjects
-    image_size = config['image_size']
+def get_loaders(args):  # TODO: allow for loading and mixing multiple subjects
     subject, n, batch_size, = args.subject, args.n, args.batch_size
     _, _, img_files = get_files(args.subject)
     train_idxs, test_idxs = train_test_split(range(len(img_files)), test_size=0.2, random_state=42)
     train_idxs, val_idxs = train_test_split(train_idxs, test_size=0.2, random_state=42)
     meta_data = get_meta_data()
-    train_loader = get_loader(subject, batch_size, image_size, meta_data, n, train_idxs)
-    val_loader = get_loader(subject, batch_size, image_size, meta_data, n, val_idxs)
-    test_loader = get_loader(subject, batch_size, image_size, meta_data, n, test_idxs)
+    train_loader = get_loader(subject, batch_size, meta_data, n, train_idxs)
+    val_loader = get_loader(subject, batch_size, meta_data, n, val_idxs)
+    test_loader = get_loader(subject, batch_size, meta_data, n, test_idxs)
     return train_loader, val_loader, test_loader
 
 
 # get batch for subject. TODO: make subject mixed batches. fmri dimensions might be subject specific.
-def get_loader(subject, batch_size, image_size, meta_data, n_samples, idxs):
+def get_loader(subject, batch_size, meta_data, n_samples, idxs):
     _, _, image_files = get_files(subject)
     n_samples = n_samples if n_samples else len(image_files)
     # lh, rh = np.load(lh_file), np.load(rh_file)
@@ -44,7 +43,7 @@ def get_loader(subject, batch_size, image_size, meta_data, n_samples, idxs):
     supers = meta_data.iloc[coco_ids]['supercategory'].values
     captions = meta_data.iloc[coco_ids]['captions'].values
     for image_file in tqdm(image_files):
-        images.append(np.array(preprocess(Image.open(image_file), image_size)))
+        images.append(np.array(preprocess(Image.open(image_file))))
     images = jnp.array(images)
     while True:
         perm = np.random.permutation(len(image_files))
@@ -53,12 +52,12 @@ def get_loader(subject, batch_size, image_size, meta_data, n_samples, idxs):
             # sample random category from each category list
             cat = jnp.array([c_to_one_hot(c) for c in categories[idxs]])
             # reshape images to (batch_size, 3, image_size, image_size)  bec
-            img = images[idxs].reshape((len(idxs), 3, image_size, image_size))
+            img = images[idxs].reshape((len(idxs), 3, 425, 425))  # don't hard code
             yield img, cat, supers[idxs], captions[idxs]
 
 
-def preprocess(image, image_size):
-    image = image.resize((image_size, image_size))
+def preprocess(image):
+    #  image = image.resize((image_size, image_size))  # TODO: resize images perhaps
     image = np.array(image)
     image = image / 255.0
     image = image.astype(np.float32)

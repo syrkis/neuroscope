@@ -10,6 +10,7 @@ from pycocotools.coco import COCO
 from tqdm import tqdm
 import pandas as pd
 from matplotlib import pyplot as plt
+import yaml
 
 
 # PATHS
@@ -68,9 +69,8 @@ def get_args(args=None):
 
 # get config file
 def get_config():
-    with open(os.path.join(ROOT_DIR, 'config.json')) as f:
-        config = json.load(f)
-        config['layer_sizes'] = [config['image_size'] ** 2] + config['hidden_layer_sizes'] + [len(cat_id_to_name)]
+    with open(os.path.join(ROOT_DIR, 'config.yaml')) as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
     return config
 
 

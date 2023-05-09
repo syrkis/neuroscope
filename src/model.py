@@ -9,8 +9,9 @@ from jax import random, grad, jit, vmap
 
 
 # init_params
-def init_mlp(layer_sizes, rng):
+def init_mlp(config, rng):
     params = []
+    layer_sizes = config['hyperparams']['layer_sizes']
     for n_in, n_out in zip(layer_sizes[:-1], layer_sizes[1:]):
         w = random.normal(rng, (n_in, n_out)) * jnp.sqrt(2 / n_in)
         b = random.normal(rng, (n_out,)) * jnp.sqrt(2 / n_in)
@@ -18,8 +19,10 @@ def init_mlp(layer_sizes, rng):
     return params
 
 
-def init_cnn(kernel_sizes, rng):  # kernel dim is [out_channels, in_channels, kernel_size, kernel_size]
+def init_cnn(config, rng):  # kernel dim is [out_channels, in_channels, kernel_size, kernel_size]
     params = []
+    channel_sizes = [config['n_channels']] + config['hyperparams']['channel_sizes']
+    kernel_sizes = list(zip(channel_sizes[:-1], channel_sizes[1:], config['hyperparams']['kernel_sizes']))
     for c_in, c_out, k in kernel_sizes:
         w = random.normal(rng, (c_out, c_in, k, k)) * jnp.sqrt(2 / (k * k * c_in))
         b = random.normal(rng, (c_out,)) * jnp.sqrt(2 / (k * k * c_in))
@@ -30,7 +33,7 @@ def init_cnn(kernel_sizes, rng):  # kernel dim is [out_channels, in_channels, ke
 def forward_cnn(params, x):
     activations = x
     for w, b in params:
-        outputs = conv2d(activations, w) # + b
+        outputs = conv(activations, w) # + b
         activations = jax.nn.relu(outputs)
     return jax.nn.sigmoid(outputs)
 
@@ -42,9 +45,8 @@ def forward_mlp(params, x):
     return jax.nn.sigmoid(outputs)
 
 
-def init_params(layer_sizes, rng):
-    params = {'mlp': init_mlp(layer_sizes['mlp'], rng), 'cnn': init_cnn(layer_sizes['cnn'], rng)}
-    return params
+def init_params(config, rng):
+    return {'cnn': init_cnn(config, rng), 'mlp': init_mlp(config, rng)}
 
 
 # model
@@ -53,7 +55,6 @@ def model(params, x):
     x = x.reshape(x.shape[0], -1)
     x = forward_mlp(params['mlp'], x)
     return x
-
 
 
 def loss_fn(params, x, y):
@@ -66,7 +67,4 @@ def predict(params, x):
     return (preds > 0.5).astype(int)
 
 
-stride = (1, 2, 2, 1)
-conv = lambda x, w, d: jax.lax.conv_general_dilated(x, w, (1, 2, 2, 1), padding='SAME')
-conv2d = lambda x, w: conv(x, w, 2)
-conv3d = lambda x, w: conv(x, w, 3)
+conv = lambda x, w: jax.lax.conv_general_dilated(x, w, (3, 3), padding='SAME')
