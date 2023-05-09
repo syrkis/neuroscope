@@ -31,7 +31,6 @@ def get_loaders(config, args):  # TODO: allow for loading and mixing multiple su
 
 # get batch for subject. TODO: make subject mixed batches. fmri dimensions might be subject specific.
 def get_loader(subject, batch_size, image_size, meta_data, n_samples, idxs):
-    n_samples = n_samples // batch_size * batch_size  # make sure n_samples is divisible by batch_size
     _, _, image_files = get_files(subject)
     n_samples = n_samples if n_samples else len(image_files)
     # lh, rh = np.load(lh_file), np.load(rh_file)
@@ -54,7 +53,7 @@ def get_loader(subject, batch_size, image_size, meta_data, n_samples, idxs):
             # sample random category from each category list
             cat = jnp.array([c_to_one_hot(c) for c in categories[idxs]])
             # reshape images to (batch_size, 3, image_size, image_size)  bec
-            img = images[idxs].reshape((batch_size, 3, image_size, image_size))
+            img = images[idxs].reshape((len(idxs), 3, image_size, image_size))
             yield img, cat, supers[idxs], captions[idxs]
 
 
