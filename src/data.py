@@ -17,8 +17,8 @@ from sklearn.model_selection import train_test_split
 
 # batch_loader
 def get_loaders(config, args):  # TODO: allow for loading and mixing multiple subjects
-    batch_size, image_size = config['batch_size'], config['image_size']
-    subject, n = args.subject, args.n
+    image_size = config['image_size']
+    subject, n, batch_size, = args.subject, args.n, args.batch_size
     _, _, img_files = get_files(args.subject)
     train_idxs, test_idxs = train_test_split(range(len(img_files)), test_size=0.2, random_state=42)
     train_idxs, val_idxs = train_test_split(train_idxs, test_size=0.2, random_state=42)

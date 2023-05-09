@@ -9,6 +9,7 @@ import json
 from pycocotools.coco import COCO
 from tqdm import tqdm
 import pandas as pd
+from matplotlib import pyplot as plt
 
 
 # PATHS
@@ -56,12 +57,12 @@ def get_files(subject, split='training'):
 
 
 # get command line arguments
-args_list = ['--subject', 'subj05', '--batch_size', '10', '--n', '100']
 def get_args(args=None):
     parser = ArgumentParser()
     parser.add_argument('--subject', type=str, default='subj05')
-    parser.add_argument('--batch_size', type=int, default=10)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n', type=int, default=100)
+    parser.add_argument('--n_steps', type=int, default=100)
     return parser.parse_args(args)
 
 
@@ -102,3 +103,16 @@ if make_coco_metas:
     df.to_csv(os.path.join(DATA_DIR, 'coco_meta_data.csv'), index=False)
     
     del train_instances_coco, val_instances_coco, train_captions_coco, val_captions_coco, merged_anns, nsd_coco, df
+
+
+def plot_metrics(metrics):
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5), dpi=100)
+    axes[0].plot(metrics['train_loss'], label='train')
+    axes[0].plot(metrics['val_loss'], label='val')
+    axes[0].set_title('loss')
+    axes[0].legend()
+    axes[1].plot(metrics['train_acc'], label='train')
+    axes[1].plot(metrics['val_acc'], label='val')
+    axes[1].set_title('accuracy')
+    axes[1].legend()
+    plt.show()

@@ -11,7 +11,7 @@ from src.train import train
 def main():
     args, config = get_args(), get_config()
     train_loader, val_loader, _ = get_loaders(config, args)  # TODO: switch to kfold
-    params, metrics = train(config, train_loader, val_loader)
+    params, metrics = train(config, args, train_loader, val_loader)
 
 
 # run main()

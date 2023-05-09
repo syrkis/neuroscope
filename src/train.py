@@ -15,10 +15,9 @@ import optax
 opt = optax.adam(1e-3)
 
 
-def train(config, train_loader, val_loader):
-    params = init_params(config['layer_sizes'], jax.random.PRNGKey(0))
+def train(params, config, args, train_loader, val_loader):
     opt_state = opt.init(params)
-    params, metrics = train_steps(params, train_loader, val_loader, opt_state, config['n_steps'])
+    params, metrics = train_steps(params, train_loader, val_loader, opt_state, args.n_steps)
     return params, metrics
     
 
