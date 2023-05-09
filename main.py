@@ -3,14 +3,17 @@
 # by: Noah Syrkis
 
 # imports
-from src import get_files, get_batches
+from src import get_args, get_config, get_loaders
 
 
 # main()
 def main():
-    lh_file, rh_file, image_files = get_files('subj05')
-    batch_loader = get_batches(lh_file, rh_file, image_files, batch_size=10)
-    print(next(batch_loader))
+    args = get_args()
+    config = get_config()
+    train_loader, val_loader, test_loader = get_loaders(config, args)
+    img, cat, sup, cap = next(train_loader)
+    print(img.shape, cat.shape, sup.shape, cap.shape)
+    
 
 
 # run main()
