@@ -12,8 +12,8 @@ import jax
 def main():
     args, config = get_args(), get_config()
     train_loader, val_loader, _ = get_loaders(config, args)  # TODO: switch to kfold
-    cnn_layer_sizes = [(3, 16, 4), (16, 32, 4)]
-    mlp_layer_sizes = [256, 256, 256, 80]
+    cnn_layer_sizes = [(3, 4, 4), (4, 8, 4)]
+    mlp_layer_sizes = [8192, 256, 256, 80]
     config['layer_sizes'] = {'cnn': cnn_layer_sizes, 'mlp': mlp_layer_sizes}
     rng = jax.random.PRNGKey(0)
     params = init_params(config['layer_sizes'], rng)

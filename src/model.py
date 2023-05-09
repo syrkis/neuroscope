@@ -18,10 +18,10 @@ def init_mlp(layer_sizes, rng):
     return params
 
 
-def init_cnn(kernel_sizes, rng):  # kernel dim is [in_channels, out_channels, kernel_size, kernel_size]
+def init_cnn(kernel_sizes, rng):  # kernel dim is [out_channels, in_channels, kernel_size, kernel_size]
     params = []
     for c_in, c_out, k in kernel_sizes:
-        w = random.normal(rng, (c_in, c_out, k, k)) * jnp.sqrt(2 / (k * k * c_in))
+        w = random.normal(rng, (c_out, c_in, k, k)) * jnp.sqrt(2 / (k * k * c_in))
         b = random.normal(rng, (c_out,)) * jnp.sqrt(2 / (k * k * c_in))
         params.append((w, b))
     return params
@@ -30,7 +30,7 @@ def init_cnn(kernel_sizes, rng):  # kernel dim is [in_channels, out_channels, ke
 def forward_cnn(params, x):
     activations = x
     for w, b in params:
-        outputs = conv2d(activations, w) + b
+        outputs = conv2d(activations, w) # + b
         activations = jax.nn.relu(outputs)
     return jax.nn.sigmoid(outputs)
 
@@ -50,6 +50,7 @@ def init_params(layer_sizes, rng):
 # model
 def model(params, x):
     x = forward_cnn(params['cnn'], x)
+    x = x.reshape(x.shape[0], -1)
     x = forward_mlp(params['mlp'], x)
     return x
 
