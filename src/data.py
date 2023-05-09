@@ -52,7 +52,9 @@ def get_loader(subject, batch_size, image_size, meta_data, n, idxs):
             idxs = perm[i:i + batch_size]
             # sample random category from each category list
             cat = jnp.array([c_to_one_hot(c) for c in categories[idxs]])
-            yield images[idxs], cat, supers[idxs], captions[idxs]
+            # reshape images to (batch_size, 3, image_size, image_size)  because jax convolutions expect this shape
+            img = images[idxs].reshape((batch_size, 3, image_size, image_size))
+            yield img, cat, supers[idxs], captions[idxs]
 
 
 def preprocess(image, image_size):
