@@ -37,6 +37,7 @@ def forward_cnn(params, x):
         activations = jax.nn.relu(outputs)
     return jax.nn.sigmoid(outputs)
 
+
 def forward_mlp(params, x):
     activations = x
     for w, b in params:
@@ -67,4 +68,5 @@ def predict(params, x):
     return (preds > 0.5).astype(int)
 
 
-conv = lambda x, w: jax.lax.conv_general_dilated(x, w, (3, 3), padding='SAME')
+strides = (3, 3)
+conv = lambda x, w: jax.lax.conv_general_dilated(x, w, strides, padding='SAME')

@@ -3,11 +3,10 @@
 # by: Noah Syrkis
 
 # imports
-from src.model import init_params, model, loss_fn, predict
-import jax
+from src.model import loss_fn, predict
 from jax import numpy as jnp
 import numpy as np
-from jax import random, grad, jit, vmap
+from jax import grad, jit
 from tqdm import tqdm
 import optax
 
@@ -26,7 +25,7 @@ def train_steps(params, metrics, train_loader, val_loader, opt_state, n_steps):
     for step in pbar:
         x, y, _, _ = next(train_loader)
         params, opt_state = update(params, x, y, opt_state)
-        if step % (n_steps // 100) == 0:
+        if step % (n_steps // 10) == 0:
             metrics = evaluate(params, train_loader, val_loader, metrics)
             pbar.set_description(f"train loss: {metrics['train_loss'][-1]:.4f}, train acc: {metrics['train_acc'][-1]:.4f}, val loss: {metrics['val_loss'][-1]:.4f}, val acc: {metrics['val_acc'][-1]:.4f}")
     return params, metrics
@@ -45,7 +44,7 @@ def accuracy(params, x, y):
     return jnp.mean(preds == y)
 
 
-def evaluate(params, train_loader, valid_loader, metrics, steps=5):
+def evaluate(params, train_loader, valid_loader, metrics, steps=1):
     # metrics is dict of lists of val loss val acc train loss train acc
     train_loss, train_acc, valid_loss, valid_acc = [], [] ,[], []
     for _ in range(steps):
