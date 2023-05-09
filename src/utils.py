@@ -56,12 +56,14 @@ def get_files(subject, split='training'):
 
 
 # get command line arguments
-def get_args():
+args_list = ['--subject', 'subj05', '--batch_size', '10', '--n', '100']
+def get_args(args=None):
     parser = ArgumentParser()
     parser.add_argument('--subject', type=str, default='subj05')
     parser.add_argument('--batch_size', type=int, default=10)
     parser.add_argument('--n', type=int, default=100)
-    return parser.parse_args()
+    return parser.parse_args(args)
+
 
 # get config file
 def get_config():
