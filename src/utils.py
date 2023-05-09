@@ -7,6 +7,8 @@ import os
 from argparse import ArgumentParser
 import json
 from pycocotools.coco import COCO
+from tqdm import tqdm
+import pandas as pd
 
 
 # PATHS
@@ -20,6 +22,7 @@ TRAIN_CAP_FILE = os.path.join(COCO_DIR, 'captions_train2017.json')
 VAL_CAP_FILE = os.path.join(COCO_DIR, 'captions_val2017.json')
 
 make_cats = False
+make_coco_metas = False
 
 if make_cats:
     coco = COCO(VAL_CAT_FILE)
@@ -66,3 +69,34 @@ def get_config():
         config = json.load(f)
         config['layer_sizes'] = [config['image_size'] ** 2] + config['hidden_layer_sizes'] + [len(cat_id_to_name)]
     return config
+
+
+
+def extract_meta(captions_coco, instances_coco, merged_anns, nds_coco_img_ids):
+    valid_ids = set(instances_coco.getImgIds())
+    for img_id in tqdm(valid_ids):
+        anns = captions_coco.loadAnns(captions_coco.getAnnIds(imgIds=img_id))
+        captions = [ann['caption'] for ann in anns]
+        innstances = instances_coco.loadAnns(instances_coco.getAnnIds(imgIds=img_id))
+        categories = list(set([instance['category_id'] for instance in innstances]))
+        supercategory = [entry['supercategory'] for entry in instances_coco.loadCats(categories)]
+        merged_anns.append({ 'cocoId': img_id, 'captions': captions, 'categories': categories, 'supercategory': supercategory })
+    return merged_anns
+
+if make_coco_metas:
+    train_instances_coco = COCO(TRAIN_CAT_FILE)
+    val_instances_coco = COCO(VAL_CAT_FILE)
+    train_captions_coco = COCO(TRAIN_CAP_FILE)
+    val_captions_coco = COCO(VAL_CAP_FILE)
+
+    merged_anns = []
+    nsd_coco = pd.read_csv(NSD_PATH)
+    nsd_coco_img_ids = set(nsd_coco['cocoId'])
+
+    valid_ids = set(val_instances_coco.getImgIds()).intersection(nsd_coco_img_ids)
+    merged_anns = extract_meta(val_captions_coco, val_instances_coco, merged_anns, nsd_coco_img_ids)
+    merged_anns = extract_meta(train_captions_coco, train_instances_coco, merged_anns, nsd_coco_img_ids)
+    df = pd.DataFrame(merged_anns)
+    df.to_csv(os.path.join(DATA_DIR, 'coco_meta_data.csv'), index=False)
+    
+    del train_instances_coco, val_instances_coco, train_captions_coco, val_captions_coco, merged_anns, nsd_coco, df
