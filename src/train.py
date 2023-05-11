@@ -23,7 +23,7 @@ def train(params, metrics, config, args, train_loader, val_loader):
 def train_steps(params, metrics, train_loader, val_loader, opt_state, n_steps):
     pbar = tqdm(range(n_steps))
     for step in pbar:
-        x, y, _, _ = next(train_loader)
+        x, y, _, _, _, _ = next(train_loader)
         params, opt_state = update(params, x, y, opt_state)
         if step % (n_steps // 10) == 0:
             metrics = evaluate(params, train_loader, val_loader, metrics)

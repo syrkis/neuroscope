@@ -11,7 +11,7 @@ from jax import random, grad, jit, vmap
 # init_params
 def init_mlp(config, rng):
     params = []
-    layer_sizes = config['hyperparams']['layer_sizes']
+    layer_sizes = config['model']['hyperparams']['layer_sizes']
     for n_in, n_out in zip(layer_sizes[:-1], layer_sizes[1:]):
         w = random.normal(rng, (n_in, n_out)) * jnp.sqrt(2 / n_in)
         b = random.normal(rng, (n_out,)) * jnp.sqrt(2 / n_in)
@@ -21,8 +21,8 @@ def init_mlp(config, rng):
 
 def init_cnn(config, rng):  # kernel dim is [out_channels, in_channels, kernel_size, kernel_size]
     params = []
-    channel_sizes = [config['n_channels']] + config['hyperparams']['channel_sizes']
-    kernel_sizes = list(zip(channel_sizes[:-1], channel_sizes[1:], config['hyperparams']['kernel_sizes']))
+    channel_sizes = [config['data']['n_channels']] + config['model']['hyperparams']['channel_sizes']
+    kernel_sizes = list(zip(channel_sizes[:-1], channel_sizes[1:], config['model']['hyperparams']['kernel_sizes']))
     for c_in, c_out, k in kernel_sizes:
         w = random.normal(rng, (c_out, c_in, k, k)) * jnp.sqrt(2 / (k * k * c_in))
         b = random.normal(rng, (c_out,)) * jnp.sqrt(2 / (k * k * c_in))
@@ -33,7 +33,7 @@ def init_cnn(config, rng):  # kernel dim is [out_channels, in_channels, kernel_s
 def forward_cnn(params, x):
     activations = x
     for w, b in params:
-        outputs = conv(activations, w) # + b
+        outputs = conv(activations, w)  # + b
         activations = jax.nn.relu(outputs)
     return jax.nn.sigmoid(outputs)
 

@@ -58,8 +58,9 @@ def get_files(subject, split='training'):
 
 
 # get command line arguments
-def get_args(args=None):
+def get_args(args):
     parser = ArgumentParser()
+    parser.add_argument('--machine', type=str, default='local')
     parser.add_argument('--subject', type=str, default='subj05')
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n', type=int, default=100)
@@ -68,11 +69,17 @@ def get_args(args=None):
 
 
 # get config file
-def get_config():
+def get_setup(args_list=None):
+    args = get_args(args_list)
     with open(os.path.join(ROOT_DIR, 'config.yaml')) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    return config
-
+    if args.machine == 'hpc':
+        config['model']['hyperparams'] = config['model']['hyperparams']['large']
+        config['data']['image_size'] = config['data']['large_image_size']
+    if args.machine == 'local':
+        config['model']['hyperparams'] = config['model']['hyperparams']['small']
+        config['data']['image_size'] = config['data']['small_image_size']
+    return config, args
 
 
 def extract_meta(captions_coco, instances_coco, merged_anns, nds_coco_img_ids):
