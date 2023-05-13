@@ -62,8 +62,9 @@ def get_args(args):
     parser = ArgumentParser()
     parser.add_argument('--machine', type=str, default='local')
     parser.add_argument('--subject', type=str, default='subj05')
+    parser.add_argument('--roi', type=str, default='EBA')
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--n', type=int, default=100)
+    parser.add_argument('--n_samples', type=int, default=100)
     parser.add_argument('--n_steps', type=int, default=100)
     return parser.parse_args(args)
 

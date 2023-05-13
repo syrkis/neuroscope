@@ -4,6 +4,7 @@
 
 # imports
 from src.utils import get_files, DATA_DIR, cat_id_to_name, coco_cat_id_to_vec_index
+from src.fmri import roi_response_to_image, lh_fmri, rh_fmri, get_roi_mask
 from jax import numpy as jnp
 import pandas as pd
 import numpy as np
@@ -17,23 +18,24 @@ from sklearn.model_selection import train_test_split
 
 # batch_loader
 def get_loaders(args, config):  # TODO: allow for loading and mixing multiple subjects
-    subject, n, batch_size, = args.subject, args.n, args.batch_size
+    subject, n_samples, batch_size, = args.subject, args.n_samples, args.batch_size
     image_size = config['data']['image_size']
     _, _, img_files = get_files(args.subject)
     train_idxs, test_idxs = train_test_split(range(len(img_files)), test_size=0.2, random_state=42)
     train_idxs, val_idxs = train_test_split(train_idxs, test_size=0.2, random_state=42)
     meta_data = get_meta_data()
-    train_loader = get_loader(subject, batch_size, meta_data, n, train_idxs, image_size)
-    val_loader = get_loader(subject, batch_size, meta_data, n, val_idxs, image_size)
-    test_loader = get_loader(subject, batch_size, meta_data, n, test_idxs, image_size)
+    train_loader = get_loader(subject, batch_size, meta_data, n_samples, train_idxs, image_size, args)
+    val_loader = get_loader(subject, batch_size, meta_data, n_samples, val_idxs, image_size, args)
+    test_loader = get_loader(subject, batch_size, meta_data, n_samples, test_idxs, image_size, args)
     return train_loader, val_loader, test_loader
 
 
 # get batch for subject. TODO: make subject mixed batches. fmri dimensions might be subject specific.
-def get_loader(subject, batch_size, meta_data, n_samples, idxs, image_size):
-    lh_file, rh_file, image_files = get_files(subject)
+def get_loader(subject, batch_size, meta_data, n_samples, idxs, image_size, args):
+    lh_fmri_roi = lh_fmri[:, get_roi_mask(args.roi, 'left')]
+    rh_fmri_roi = rh_fmri[:, get_roi_mask(args.roi, 'right')]
+    _, _, image_files = get_files(subject)
     n_samples = n_samples if n_samples else len(image_files)
-    lh, rh = jnp.array(np.load(lh_file)), jnp.array(np.load(rh_file))
     image_files = [image_files[i] for i in idxs]
     if n_samples < len(image_files):
         image_files = random.sample(image_files, n_samples)
@@ -54,8 +56,7 @@ def get_loader(subject, batch_size, meta_data, n_samples, idxs, image_size):
             cat = jnp.array([c_to_one_hot(c) for c in categories[idxs]])
             # reshape images to (batch_size, 3, image_size, image_size)  bec
             img = images[idxs].reshape((len(idxs), 3, image_size, image_size))  # don't hard code
-            lh_response, rh_response = lh[idxs], rh[idxs]
-            yield img, cat, supers[idxs], captions[idxs], lh_response, rh_response
+            yield img, cat, supers[idxs], captions[idxs], lh_fmri_roi[idxs], rh_fmri_roi[idxs]
 
 
 def preprocess(image, image_size):
