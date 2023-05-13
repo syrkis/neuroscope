@@ -15,7 +15,7 @@ date: \today
 Decoding images from brain activity is a well studied problem in the field of
 neuroscience. The first successful decoding of images from brain activity was
 done by @haxby_distributed_2001. Like the current project, Haxby et al. used fMRI data.
-Most recently @lin_mind_2022 used a deep neural network to decode images from brain activity.
+Most recently @lin_mind_2022 used a deep neural network to decode images from brain activity. Also @thomas_benchmarking_2023 merits mention, focusing on developing a mapping between brain activity and mental states more broadly.
 
 
 ## Data
