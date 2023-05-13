@@ -26,6 +26,13 @@ VAL_CAP_FILE = os.path.join(COCO_DIR, 'captions_val2017.json')
 make_cats = False
 make_coco_metas = False
 
+rois = ["V1v", "V1d", "V2v", "V2d", "V3v", "V3d", "hV4",
+        "EBA", "FBA-1", "FBA-2", "mTL-bodies", "OFA", "FFA-1",
+        "FFA-2", "mTL-faces", "aTL-faces", "OPA", "PPA", "RSC",
+        "OWFA", "VWFA-1", "VWFA-2", "mfs-words", "mTL-words",
+        "early", "midventral", "midlateral", "midparietal",
+        "ventral", "lateral", "parietal"]
+
 if make_cats:
     coco = COCO(VAL_CAT_FILE)
     cats = coco.loadCats(coco.getCatIds())
@@ -59,14 +66,19 @@ def get_files(subject, split='training'):
 
 # get command line arguments
 def get_args(args):
+    models = ['fmri2cat', 'img2cat', 'fmri2img', 'img2fmri']
     parser = ArgumentParser()
     parser.add_argument('--machine', type=str, default='local')
+    parser.add_argument('--model', type=str, default='fmri2cat')
     parser.add_argument('--subject', type=str, default='subj05')
     parser.add_argument('--roi', type=str, default='EBA')
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n_samples', type=int, default=100)
     parser.add_argument('--n_steps', type=int, default=100)
-    return parser.parse_args(args)
+    args = parser.parse_args(args)
+    assert args.model in models, f'--model must be one of {models}'
+    assert args.roi in rois, f'--roi must be one of {rois}'
+    return args
 
 
 # get config file
@@ -74,11 +86,12 @@ def get_setup(args_list=None):
     args = get_args(args_list)
     with open(os.path.join(ROOT_DIR, 'config.yaml')) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+    config['model'] = config['models'][args.model]
     if args.machine == 'hpc':
-        config['model']['hyperparams'] = config['model']['hyperparams']['large']
+        # config['model']['hyperparams'] = config['model']['hyperparams']['large']
         config['data']['image_size'] = config['data']['large_image_size']
     if args.machine == 'local':
-        config['model']['hyperparams'] = config['model']['hyperparams']['small']
+        # config['model']['hyperparams'] = config['model']['hyperparams']['small']
         config['data']['image_size'] = config['data']['small_image_size']
     return config, args
 

@@ -9,9 +9,8 @@ from jax import random, grad, jit, vmap
 
 
 # init_params
-def init_mlp(config, rng):
+def init_mlp(layer_sizes, rng):
     params = []
-    layer_sizes = config['model']['hyperparams']['layer_sizes']
     for n_in, n_out in zip(layer_sizes[:-1], layer_sizes[1:]):
         w = random.normal(rng, (n_in, n_out)) * jnp.sqrt(2 / n_in)
         b = random.normal(rng, (n_out,)) * jnp.sqrt(2 / n_in)
@@ -47,7 +46,7 @@ def forward_mlp(params, x):
 
 
 def init_params(config, rng):
-    return {'cnn': init_cnn(config, rng), 'mlp': init_mlp(config, rng)}
+    return {'cnn': init_cnn(config, rng), 'mlp': init_mlp(config['layer_sizes'], rng)}
 
 
 # model
