@@ -7,6 +7,7 @@ from src import get_setup, init_params
 from src.data import get_loaders
 from src.train import train
 import jax
+from tqdm import tqdm
 
 
 # main function

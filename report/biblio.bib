@@ -1,4 +1,21 @@
 
+@misc{bronstein_geometric_2021,
+	title = {Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges},
+	url = {http://arxiv.org/abs/2104.13478},
+	doi = {10.48550/arXiv.2104.13478},
+	shorttitle = {Geometric Deep Learning},
+	abstract = {The last decade has witnessed an experimental revolution in data science and machine learning, epitomised by deep learning methods. Indeed, many high-dimensional learning tasks previously thought to be beyond reach -- such as computer vision, playing Go, or protein folding -- are in fact feasible with appropriate computational scale. Remarkably, the essence of deep learning is built from two simple algorithmic principles: first, the notion of representation or feature learning, whereby adapted, often hierarchical, features capture the appropriate notion of regularity for each task, and second, learning by local gradient-descent type methods, typically implemented as backpropagation. While learning generic functions in high dimensions is a cursed estimation problem, most tasks of interest are not generic, and come with essential pre-defined regularities arising from the underlying low-dimensionality and structure of the physical world. This text is concerned with exposing these regularities through unified geometric principles that can be applied throughout a wide spectrum of applications. Such a 'geometric unification' endeavour, in the spirit of Felix Klein's Erlangen Program, serves a dual purpose: on one hand, it provides a common mathematical framework to study the most successful neural network architectures, such as {CNNs}, {RNNs}, {GNNs}, and Transformers. On the other hand, it gives a constructive procedure to incorporate prior physical knowledge into neural architectures and provide principled way to build future architectures yet to be invented.},
+	number = {{arXiv}:2104.13478},
+	publisher = {{arXiv}},
+	author = {Bronstein, Michael M. and Bruna, Joan and Cohen, Taco and Veličković, Petar},
+	urldate = {2023-04-25},
+	date = {2021-05-02},
+	eprinttype = {arxiv},
+	eprint = {2104.13478 [cs, stat]},
+	keywords = {Computer Science - Artificial Intelligence, Computer Science - Computational Geometry, Computer Science - Computer Vision and Pattern Recognition, Computer Science - Machine Learning, Statistics - Machine Learning},
+	file = {arXiv Fulltext PDF:/Users/syrkis/Zotero/storage/GGZKHARX/Bronstein et al. - 2021 - Geometric Deep Learning Grids, Groups, Graphs, Ge.pdf:application/pdf;arXiv.org Snapshot:/Users/syrkis/Zotero/storage/Y9H233K9/2104.html:text/html},
+}
+
 @online{denton_deep_2015,
 	title = {Deep Generative Image Models using a Laplacian Pyramid of Adversarial Networks},
 	url = {https://arxiv.org/abs/1506.05751v1},
@@ -476,4 +493,12 @@ Section: New Results},
 	pmid = {11577229},
 	keywords = {Brain Mapping, Face, Female, Form Perception, Humans, Magnetic Resonance Imaging, Male, Pattern Recognition, Visual, Recognition, Psychology, Temporal Lobe, Visual Pathways},
 	file = {Accepted Version:/Users/syrkis/Zotero/storage/CLWPS83F/Haxby et al. - 2001 - Distributed and overlapping representations of fac.pdf:application/pdf},
+}
+
+@article{frostig_compiling_nodate,
+	title = {Compiling machine learning programs via high-level tracing},
+	abstract = {We describe {JAX}, a domain-specific tracing {JIT} compiler for generating high-performance accelerator code from pure Python and Numpy machine learning programs. {JAX} uses the {XLA} compiler infrastructure to generate optimized code for the program subroutines that are most favorable for acceleration, and these optimized subroutines can be called and orchestrated by arbitrary Python. Because the system is fully compatible with Autograd, it allows forward- and reverse-mode automatic differentiation of Python functions to arbitrary order. Because {JAX} supports structured control flow, it can generate code for sophisticated machine learning algorithms while maintaining high performance. We show that by combining {JAX} with Autograd and Numpy we get an easily programmable and highly performant {ML} system that targets {CPUs}, {GPUs}, and {TPUs}, capable of scaling to multi-core Cloud {TPUs}.},
+	author = {Frostig, Roy and Johnson, Matthew James and Leary, Chris},
+	langid = {english},
+	file = {Frostig et al. - Compiling machine learning programs via high-level.pdf:/Users/syrkis/Zotero/storage/I8FH2F7Z/Frostig et al. - Compiling machine learning programs via high-level.pdf:application/pdf},
 }
