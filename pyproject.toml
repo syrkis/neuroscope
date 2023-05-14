@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "neuroscope"
+version = "0.1.0"
+description = ""
+authors = ["Noah Syrkis <noah@syrkis.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+jax = "^0.4.10"
+jaxlib = "^0.4.10"
+optax = "^0.1.5"
+dm-haiku = "^0.0.9"
+seaborn = "^0.12.2"
+tqdm = "^4.65.0"
+numpy = "^1.24.3"
+pandas = "^2.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
