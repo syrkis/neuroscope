@@ -1,34 +1,24 @@
-FROM nvidia/cuda:11.1.1-devel-ubuntu20.04
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
+
+WORKDIR /workspace
 
 ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa
 
-WORKDIR /app
+RUN apt-get update && \
+    apt-get install -y python3.11 python3.11-distutils && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y tzdata && \
-    ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
-    dpkg-reconfigure --frontend noninteractive tzdata
-RUN apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
-    libreadline-dev libsqlite3-dev wget curl llvm git
+RUN apt-get update && apt-get install -y curl
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python3.11 get-pip.py --force-reinstall
 
-RUN curl https://pyenv.run | bash
+COPY requirements.txt .
 
-ENV PYENV_ROOT="/root/.pyenv"
-ENV PATH="$PYENV_ROOT/bin:$PATH"
+RUN python3.11 -m pip install -r requirements.txt
 
-RUN pyenv install 3.11.3
-RUN pyenv global 3.11.3
-ENV PATH="/root/.pyenv/versions/3.11.3/bin:${PATH}"
+RUN python3.11 -m pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
-COPY poetry.lock pyproject.toml /app/
-
-RUN python -m pip install --upgrade pip
-
-RUN pip install poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-dev --no-interaction --no-ansi --no-root
-
-RUN poetry run pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-
-RUN chmod -R 555 /root/.pyenv
-
-CMD ["poetry", "run", "python", "-c", "import jax; print(jax.devices())"]
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
