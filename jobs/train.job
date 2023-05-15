@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#SBATCH --job-name=virian          # Job name
+#SBATCH --output=logs/train.log    # Name of output file
+#SBATCH --cpus-per-task=8          # Schedule one core
+#SBATCH --time=01:00:00            # Run time (hh:mm:ss)
+#SBATCH --partition=red            # Run on either the Red or Brown queue
+#SBATCH --gres=gpu                 # Schedule a GPU
+#SBATCH --mem=32G                  # memory
+#SBATCH --account=students         # account
+
+
+module --ignore-cache load singularity/3.4.1
+module --ignore-cache load CUDA/11.1.1-GCC-10.2.0
+
+srun singularity exec --nv container.sif python3.11 main.py

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#SBATCH --job-name=container       # Job name
+#SBATCH --output=logs/build.log    # Name of output file
+#SBATCH --cpus-per-task=8          # Schedule one core
+#SBATCH --time=01:00:00            # Run time (hh:mm:ss)
+#SBATCH --partition=red            # Run on either the Red or Brown queue
+#SBATCH --mem=32G                  # memory
+#SBATCH --account=students         # account
+
+
+module load singularity
+
+srun singularity build container.sif docker://syrkis/neuroscope -y
