@@ -4,3 +4,4 @@ logs/
 outputs/
 **/*.svg
 **/*.pdf
+**/*.sif
