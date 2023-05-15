@@ -7,8 +7,16 @@ date: \today
 ---
 
 # Abstract
+This project aims to reconstruct images from brain activity.
+This project aims to reconstruct images from brain activity.
+The project will use fMRI data to reconstruct images.
+The project will use a deep neural network to reconstruct images,
+using differentiable programming and geometric deep learning.
+The project will use a graph neural network (GNN) @bronstein_geometric_2021.
+
 
 # Introduction
+While the brain is a complex organ, it is possible to measure its activity.
 The goal of this project is to reconstruct images from brain activity.
 Specifically, the project will use fMRI data to reconstruct images.
 The project will use a deep neural network to reconstruct images,
