@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 jax = "^0.4.10"
+jraph = "^0.0.6.dev0"
 optax = "^0.1.5"
 dm-haiku = "^0.0.9"
 seaborn = "^0.12.2"
@@ -15,10 +16,11 @@ tqdm = "^4.65.0"
 numpy = "^1.24.3"
 pandas = "^2.0.1"
 jupyterlab = "^4.0.0"
-pycocotools = "^2.0.6"
 nilearn = "^0.10.1"
 networkx = "^3.1"
 wandb = "^0.15.2"
+python-igraph = "^0.10.4"
+plotly = "^5.14.1"
 
 
 [build-system]
