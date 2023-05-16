@@ -3,6 +3,4 @@ logs/
 wandb/
 **/__pycache__
 outputs/
-**/*.svg
-**/*.pdf
 **/*.sif
