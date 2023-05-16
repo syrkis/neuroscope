@@ -62,6 +62,13 @@ def get_roi_mask(roi, hem, atlas='challenge'):
     return roi_mask
 
 
+def get_multi_roi_mask(rois, hem, atlas='challenge'):
+    roi_mask = np.zeros(len(challenge[hem[0]+'h.floc-bodies'])).astype(bool)
+    for roi in rois:
+        roi_mask += get_roi_mask(roi, hem, atlas)
+    return roi_mask
+
+
 def roi_response_to_image(roi, idxs, hem):  # TODO: ensure correctness
     # given a roi, return the response to image for that roi in the given hemisphere
     roi_mask = get_roi_mask(roi, hem, atlas='challenge')

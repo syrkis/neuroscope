@@ -4,7 +4,7 @@
 
 # imports
 from src.utils import get_files, DATA_DIR, cat_id_to_name, coco_cat_id_to_vec_index
-from src.fmri import roi_response_to_image, lh_fmri, rh_fmri, get_roi_mask
+from src.fmri import roi_response_to_image, lh_fmri, rh_fmri, get_multi_roi_mask
 from jax import numpy as jnp
 import pandas as pd
 import numpy as np
@@ -32,8 +32,8 @@ def get_loaders(args, config):  # TODO: allow for loading and mixing multiple su
 
 # get batch for subject. TODO: make subject mixed batches. fmri dimensions might be subject specific.
 def get_loader(subject, batch_size, meta_data, n_samples, idxs, image_size, args):
-    lh_fmri_roi = lh_fmri[:, get_roi_mask(args.roi, 'left')]
-    rh_fmri_roi = rh_fmri[:, get_roi_mask(args.roi, 'right')]
+    lh_fmri_roi = lh_fmri[:, get_multi_roi_mask(args.rois, 'left')]
+    rh_fmri_roi = rh_fmri[:, get_multi_roi_mask(args.rois, 'right')]
     _, _, image_files = get_files(subject)
     n_samples = n_samples if n_samples else len(image_files)
     image_files = [image_files[i] for i in idxs]

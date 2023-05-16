@@ -71,13 +71,13 @@ def get_args(args):
     parser.add_argument('--machine', type=str, default='local')
     parser.add_argument('--model', type=str, default='fmri2cat')
     parser.add_argument('--subject', type=str, default='subj05')
-    parser.add_argument('--roi', type=str, default='EBA')
+    parser.add_argument('--rois', type=str, default='V1v,V2v,V3v')
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--n_samples', type=int, default=100)
     parser.add_argument('--n_steps', type=int, default=100)
     args = parser.parse_args(args)
     assert args.model in models, f'--model must be one of {models}'
-    assert args.roi in rois, f'--roi must be one of {rois}'
+    args.rois = args.rois.split(',')
     return args
 
 
