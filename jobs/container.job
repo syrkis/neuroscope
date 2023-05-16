@@ -11,4 +11,5 @@
 
 module load singularity
 
-srun singularity build container.sif docker://syrkis/neuroscope -y
+srun rm container.sif
+srun singularity build container.sif docker://syrkis/neuroscope
