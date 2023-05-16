@@ -77,7 +77,6 @@ def get_args(args):
     parser.add_argument('--n_steps', type=int, default=100)
     args = parser.parse_args(args)
     assert args.model in models, f'--model must be one of {models}'
-    args.rois = args.rois.split(',')
     return args
 
 

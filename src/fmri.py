@@ -64,7 +64,7 @@ def get_roi_mask(roi, hem, atlas='challenge'):
 
 def get_multi_roi_mask(rois, hem, atlas='challenge'):
     roi_mask = np.zeros(len(challenge[hem[0]+'h.floc-bodies'])).astype(bool)
-    for roi in rois:
+    for roi in rois.split(','):
         roi_mask += get_roi_mask(roi, hem, atlas)
     return roi_mask
 
