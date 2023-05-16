@@ -2375,6 +2375,21 @@ files = [
 tests = ["pytest"]
 
 [[package]]
+name = "pycocotools"
+version = "2.0.6"
+description = "Official APIs for the MS-COCO dataset"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "pycocotools-2.0.6.tar.gz", hash = "sha256:7fe089b05cc18e806dcf3bd764708d86dab922a100f3734eb77fb77a70a1d18c"},
+]
+
+[package.dependencies]
+matplotlib = ">=2.1.0"
+numpy = "*"
+
+[[package]]
 name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
@@ -3393,4 +3408,4 @@ test = ["websockets"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "f89088b4afc80590a54d169df4446e734c4648b78661f43f6bbec7f74f20288f"
+content-hash = "4fb8da4d06068ca069df027e223164f4744f51d849c7a95d7125fa43ccb3c82b"
