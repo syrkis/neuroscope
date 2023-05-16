@@ -16,10 +16,10 @@ def main():
     train_loader, val_loader, _ = get_loaders(args, config)  # TODO: switch to kfold
     rng = jax.random.PRNGKey(0)
     params = init_params(config, rng)
-    metrics = { 'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': [] }
+    metrics = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
     params, metrics = train(params, metrics, config, args, train_loader, val_loader)
 
 
 # run main()
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

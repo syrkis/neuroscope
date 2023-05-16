@@ -18,10 +18,20 @@ def init_mlp(layer_sizes, rng):
     return params
 
 
-def init_cnn(config, rng):  # kernel dim is [out_channels, in_channels, kernel_size, kernel_size]
+def init_cnn(
+    config, rng
+):  # kernel dim is [out_channels, in_channels, kernel_size, kernel_size]
     params = []
-    channel_sizes = [config['data']['n_channels']] + config['model']['hyperparams']['channel_sizes']
-    kernel_sizes = list(zip(channel_sizes[:-1], channel_sizes[1:], config['model']['hyperparams']['kernel_sizes']))
+    channel_sizes = [config["data"]["n_channels"]] + config["model"]["hyperparams"][
+        "channel_sizes"
+    ]
+    kernel_sizes = list(
+        zip(
+            channel_sizes[:-1],
+            channel_sizes[1:],
+            config["model"]["hyperparams"]["kernel_sizes"],
+        )
+    )
     for c_in, c_out, k in kernel_sizes:
         w = random.normal(rng, (c_out, c_in, k, k)) * jnp.sqrt(2 / (k * k * c_in))
         b = random.normal(rng, (c_out,)) * jnp.sqrt(2 / (k * k * c_in))
@@ -46,14 +56,14 @@ def forward_mlp(params, x):
 
 
 def init_params(config, rng):
-    return {'cnn': init_cnn(config, rng), 'mlp': init_mlp(config['layer_sizes'], rng)}
+    return {"cnn": init_cnn(config, rng), "mlp": init_mlp(config["layer_sizes"], rng)}
 
 
 # model
 def model(params, x):
-    x = forward_cnn(params['cnn'], x)
+    x = forward_cnn(params["cnn"], x)
     x = x.reshape(x.shape[0], -1)
-    x = forward_mlp(params['mlp'], x)
+    x = forward_mlp(params["mlp"], x)
     return x
 
 
@@ -62,10 +72,10 @@ def loss_fn(params, x, y):
     return -jnp.mean(y * jnp.log(pred) + (1 - y) * jnp.log(1 - pred))
 
 
-def predict(params, x):  
+def predict(params, x):
     preds = model(params, x)
     return (preds > 0.5).astype(int)
 
 
 strides = (3, 3)
-conv = lambda x, w: jax.lax.conv_general_dilated(x, w, strides, padding='SAME')
+conv = lambda x, w: jax.lax.conv_general_dilated(x, w, strides, padding="SAME")
