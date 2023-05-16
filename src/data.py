@@ -39,6 +39,7 @@ def get_loader(subject, batch_size, meta_data, n_samples, idxs, image_size, args
     image_files = [image_files[i] for i in idxs]
     if n_samples < len(image_files):
         image_files = random.sample(image_files, n_samples)
+    image_files = image_files[:len(image_files) // batch_size * batch_size]
     images = []
     # look up categories for each image
     coco_ids = [int(f.split('.')[0].split('-')[-1]) for f in image_files]
