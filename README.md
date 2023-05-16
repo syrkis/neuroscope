@@ -12,4 +12,5 @@ Tools of note include JAX and nilearn, in addition to the usual suspects (numpy,
 for data loading, model definitions, training, and utility functions, respectively.
 
 To run the project locally, please ensure that `data` is populated with the Algonauts data, and our (currently unavailable) COCO augmentations.
-Then, run `pip install -r requirements.txt` to install the necessary dependencies in a virtual python 3.11 environment.
+Then, run `pip install -r requirements.txt` to install the necessary dependencies in a virtual python 3.11 environment of your choice.
+Finally, run `jupyter lab` to start the notebook server.
