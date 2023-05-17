@@ -85,15 +85,9 @@ vec_index_to_coco_cat_id = {i: cat_id for i, cat_id in enumerate(cat_id_to_name.
 # get_nsd_files
 def get_files(subject, split="training"):
     if split == "training":
-        lh_fmri_file = os.path.join(
-            DATA_DIR, subject, "training_split/training_fmri/lh_training_fmri.npy"
-        )
-        rh_fmri_file = os.path.join(
-            DATA_DIR, subject, "training_split/training_fmri/rh_training_fmri.npy"
-        )
-    image_dir = os.path.join(DATA_DIR, subject, split + "_split", split + "_images")
-    image_files = [os.path.join(image_dir, file) for file in os.listdir(image_dir)]
-    return lh_fmri_file, rh_fmri_file, image_files
+        image_dir = os.path.join(DATA_DIR, subject, split + "_split", split + "_images")
+        image_files = [os.path.join(image_dir, file) for file in os.listdir(image_dir)]
+        return image_files
 
 
 # get command line arguments
@@ -104,8 +98,8 @@ def get_args(args):
     parser.add_argument("--model", type=str, default="fmri2cat")
     parser.add_argument("--subject", type=str, default="subj05")
     parser.add_argument("--rois", type=str, default="V1v,V2v,V3v")
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--n_samples", type=int, default=100)
+    parser.add_argument("--batch_size", type=int, default=16)
+    parser.add_argument("--n_samples", type=int, default=256)
     parser.add_argument("--n_steps", type=int, default=100)
     args = parser.parse_args(args)
     assert args.model in models, f"--model must be one of {models}"
@@ -124,7 +118,7 @@ def get_setup(args_list=None):
     if args.machine == "local":
         # config['model']['hyperparams'] = config['model']['hyperparams']['small']
         config["data"]["image_size"] = config["data"]["small_image_size"]
-    return config, args
+    return args, config
 
 
 def extract_meta(captions_coco, instances_coco, merged_anns, nds_coco_img_ids):

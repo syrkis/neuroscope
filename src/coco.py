@@ -7,20 +7,15 @@ from src.utils import DATA_DIR, cat_id_to_name, coco_cat_id_to_vec_index
 from jax import numpy as jnp
 import os
 import ast
-import random
 import numpy as np
 import pandas as pd
-from PIL import Image
-from tqdm import tqdm
-from sklearn.model_selection import train_test_split
-
 
 # functions for coco data sets, including loading and preprocessing, making meta data files, etc.
 def preprocess(image, image_size):
-    image = image.resize((image_size, image_size))  # TODO: resize images perhaps
+    image = image.resize((image_size, image_size))
     image = np.array(image)
     image = image / 255.0
-    image = image.astype(np.float32)
+    image = image.astype(jnp.float32)
     return image
 
 

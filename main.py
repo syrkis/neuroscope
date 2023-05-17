@@ -12,12 +12,18 @@ from tqdm import tqdm
 
 # main function
 def main():
-    config, args = get_setup()
-    train_loader, val_loader, _ = get_loaders(args, config)  # TODO: switch to kfold
-    rng = jax.random.PRNGKey(0)
-    params = init_params(config, rng)
-    metrics = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
-    params, metrics = train(params, metrics, config, args, train_loader, val_loader)
+    args, config = get_setup()
+    k_fold, _ = get_loaders(args, config)
+    for train_loader, val_loader in tqdm(k_fold):
+        for i in range(1000):
+            img, cat, sub, cap, fmri = next(train_loader)
+            print(img.shape, cat.shape, sub.shape, cap.shape, fmri.shape)
+            img, cat, sub, cap, fmri = next(val_loader)
+            print(img.shape, cat.shape, sub.shape, cap.shape, fmri.shape)
+    # rng = jax.random.PRNGKey(0)
+    # params = init_params(config, rng)
+    # metrics = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
+    # params, metrics = train(params, metrics, config, args, k_fold)
 
 
 # run main()
