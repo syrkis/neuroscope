@@ -25,7 +25,7 @@ def get_loaders(args, config):  # TODO: allow for loading and mixing multiple su
     images = jnp.array(images)
     train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.2, random_state=42))
     test_loader = get_loader(images[test_idxs], args, meta_data, [img_files[idx] for idx in test_idxs])
-    return k_fold_fn(images[train_idxs], args, config, meta_data, [img_files[idx] for idx in train_idxs]), test_loader
+    return k_fold_fn(images[train_idxs], args, meta_data, [img_files[idx] for idx in train_idxs]), test_loader
 
 
 # cross validation
@@ -41,9 +41,11 @@ def k_fold_fn(images, args, meta_data, img_files, k=5):
 # get batch for subject. TODO: mix subjects?
 def get_loader(images, args, meta_data, img_files):
     """return a data loader combining images and fmri data, and adding COCO stuff"""
+    
     lh_fmri_roi = lh_fmri[:, get_multi_roi_mask(args.rois, "left")]
     rh_fmri_roi = rh_fmri[:, get_multi_roi_mask(args.rois, "right")]
     fmri = jnp.concatenate((lh_fmri_roi, rh_fmri_roi), axis=1)
+
     coco_ids = [int(f.split(".")[0].split("-")[-1]) for f in img_files]  # for getting coco meta data
     cats = meta_data.iloc[coco_ids]["categories"].values           # category info
     cats = jnp.array([c_to_one_hot(c) for c in cats])        # one-hot encoding
@@ -53,6 +55,6 @@ def get_loader(images, args, meta_data, img_files):
     while True:
         perm = np.random.permutation(len(img_files))              # randomize order of images
         perm = perm[: len(perm) - (len(perm) % args.batch_size)]  # drop last batch if it's not full
-        for i in range(0, len(img_files), args.batch_size):
+        for i in range(0, len(perm), args.batch_size):
             idxs = perm[i : i + args.batch_size]
             yield images[idxs], cats[idxs], supers[idxs], captions[idxs], fmri[idxs]
