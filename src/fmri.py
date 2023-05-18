@@ -12,6 +12,17 @@ import os
 from nilearn import datasets, plotting
 
 
+# connectome construction
+def get_connectome(roi, hem, atlas="challenge"):
+    # given a roi, return the connectome for that roi in the given hemisphere
+    roi_mask = get_roi_mask(roi, hem, atlas)
+    if hem == "left":
+        res = lh_fmri[:, roi_mask]
+    if hem == "right":
+        res = rh_fmri[:, roi_mask]
+    return res
+
+
 # constants
 subject = "subj05"
 data_dir = "data/"
