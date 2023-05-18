@@ -132,19 +132,3 @@ def fsaverage_roi_response_to_image(roi, img, hem):  # TODO: ensure correctness
     return res
 
 
-def plot_region(roi, hem, img=None):
-    # if variable called view exists, close it
-    if img is None:
-        surface = fsaverage_roi(roi, hem)
-    else:
-        surface = fsaverage_roi_response_to_image(roi, img, hem)
-    view = plotting.view_surf(
-        surf_mesh=atlas["pial_" + hem],
-        surf_map=surface,
-        bg_map=atlas["sulc_" + hem],
-        threshold=1e-14,
-        cmap="twilight_r",
-        colorbar=True,
-        title=roi + ", " + hem + " hemisphere",
-    )
-    view.open_in_browser()
