@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 import networkx as nx
 import igraph as ig
 import jraph
+from nilearn import plotting, datasets
 
 # functions
 def connectome_to_nx_graph(connectome):
@@ -89,5 +90,47 @@ def plot_graph(graph: jraph.GraphsTuple) -> None:
     data = [edge_trace, node_trace]
     fig = go.Figure(data=data, layout=layout)
     fig.show()
-    
 
+
+def plot_regions(rois, hem, img=None):
+    # if variable called view exists, close it
+    if img is None:
+        surface = np.zeros(fsaverage_roi_response_to_image(rois[0], img, hem).shape[0])
+        for roi in rois:
+            surface += fsaverage_roi(roi, hem)
+    else:
+        surface = np.zeros(fsaverage_roi_response_to_image(rois[0], img, hem).shape[0])
+        for roi in rois:
+            surface += fsaverage_roi_response_to_image(roi, img, hem)
+    view = plotting.view_surf(
+        surf_mesh=atlas["pial_" + hem],
+        surf_map=surface,
+        darkness=1.0,
+        bg_map=atlas["sulc_" + hem],
+        threshold=1e-14,
+        cmap="twilight_shifted",
+        colorbar=True,
+        title=hem + " hemisphere " + ", ".join(rois),
+        black_bg=True,
+    )
+    return view.resize(height=900, width=1400)
+
+
+# plot_regions(rois, "left", img=2)
+
+def plot_region(roi, hem, img=None):
+    # if variable called view exists, close it
+    if img is None:
+        surface = fsaverage_roi(roi, hem)
+    else:
+        surface = fsaverage_roi_response_to_image(roi, img, hem)
+    view = plotting.view_surf(
+        surf_mesh=atlas["pial_" + hem],
+        surf_map=surface,
+        bg_map=atlas["sulc_" + hem],
+        threshold=1e-14,
+        cmap="twilight_r",
+        colorbar=True,
+        title=roi + ", " + hem + " hemisphere",
+    )
+    view.open_in_browser()
