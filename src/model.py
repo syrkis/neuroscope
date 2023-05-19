@@ -8,6 +8,7 @@ from jax import numpy as jnp
 from jax import random
 
 
+# TODO: create haiku based linear model that deals with all 3 modalities
 # init_params
 def init_mlp(layer_sizes, rng):  # TODO: switch to haiku
     params = []

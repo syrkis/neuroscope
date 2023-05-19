@@ -18,7 +18,7 @@ def get_loaders(args, config):
     """return a test data loader, and a k-fold cross validation generator"""
     image_size = config["data"]["image_size"]
     meta_data = get_meta_data()
-    images = []  # TODO: testing todo stuff in the middle of a line
+    images = []
     img_files = [f for f in get_files(args.subject) if f.endswith(".png")][
         : args.n_samples
     ]
