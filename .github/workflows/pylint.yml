@@ -25,3 +25,7 @@ jobs:
     - name: Analysing the code with pylint
       run: |
         pylint $(git ls-files '*.py')
+    - name: TODO to Issue
+      uses: alstr/todo-to-issue-action@v4
+      with:
+        AUTO_ASSIGN: true
