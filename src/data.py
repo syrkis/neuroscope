@@ -14,8 +14,7 @@ from src.fmri import lh_fmri, rh_fmri, get_multi_roi_mask
 from src.coco import preprocess, get_meta_data, c_to_one_hot
 
 # batch_loader
-# TODO: this is a mess, clean it up
-def get_loaders(args, config):  # TODO allow for loading and mixing multiple subjects
+def get_loaders(args, config):
     """return a test data loader, and a k-fold cross validation generator"""
     image_size = config["data"]["image_size"]
     meta_data = get_meta_data()
