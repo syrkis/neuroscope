@@ -6,6 +6,7 @@
 import jax
 from jax import numpy as jnp
 from jax import random
+import haiku as hk
 
 
 # TODO: create haiku based linear model that deals with all 3 modalities
@@ -18,7 +19,7 @@ def init_mlp(layer_sizes, rng):  # TODO: switch to haiku
         params.append((w, b))
     return params
 
-
+ 
 def init_cnn(config, rng):
     params = []
     channel_sizes = [config["data"]["n_channels"]] + config["model"]["hyperparams"][
