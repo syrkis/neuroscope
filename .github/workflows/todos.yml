@@ -1,21 +1,14 @@
-name: TODO to Issue
-on:
-  push:
-    branches:
-      - main
+name: TODO workflow
+on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Build
-        run: make build
-      - name: Test
-        run: make test
-      - name: Convert TODOs to Issues
-        uses: alstr/todo-to-issue-action@v4
-        with:
-          auto_assign: true
-          identifiers: |
-            - TODO
-            - FIXME
+    - uses: actions/checkout@master
+    - name: Run tdg-github-action
+      uses: ribtoks/tdg-github-action@master
+      with:
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPO: ${{ github.repository }}
+        SHA: ${{ github.sha }}
+        REF: ${{ github.ref }}
