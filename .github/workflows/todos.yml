@@ -1,16 +1,9 @@
-name: TODO to Issue
-
-on:
-  push:
-    branches: [ main ]
-
+name: "Run TODO to Issue"
+on: ["push"]
 jobs:
-  todo-to-issue:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: TODO to Issue
-        uses: peter-evans/todo-to-issue@v1.2.0
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+    build:
+        runs-on: "ubuntu-latest"
+        steps:
+            - uses: "actions/checkout@v3"
+            - name: "TODO to Issue"
+              uses: "alstr/todo-to-issue-action@v4"
