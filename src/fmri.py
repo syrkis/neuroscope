@@ -98,7 +98,7 @@ def roi_response_to_image(roi, idxs, hem):  # TODO: ensure correctness
     return res
 
 
-def fsaverage_roi(roi, hem):
+def fsaverage_roi(roi, hem):  # TODO: ensure correctness
     """given a roi, return the roi mask for the given hemisphere"""
     roi_class = roi_to_roi_class(roi)
     fsaverage_roi_mask = fsaverage[f"{hem[0]}h.{roi_class}"] == roi_to_map_index(roi)
