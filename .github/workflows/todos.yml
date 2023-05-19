@@ -1,21 +1,16 @@
-name: TDG
-on: [push, pull_request]
+name: TODO to Issue
+
+on:
+  push:
+    branches: [ main ]
+
 jobs:
-  build:
+  todo-to-issue:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - name: Run tdg-github-action
-      uses: ribtoks/tdg-github-action@master
-      with:
-        TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        REPO: ${{ github.repository }}
-        SHA: ${{ github.sha }}
-        REF: ${{ github.ref }}
-        LABEL: "my label"
-        MIN_WORDS: 3
-        MIN_CHARACTERS: 40
-        ADD_LIMIT: 1
-        CLOSE_LIMIT: 1
-        ROOT: "src"
-        INCLUDE_PATTERN: "\\.(py|ipynb)$"
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: TODO to Issue
+        uses: peter-evans/todo-to-issue@v1.2.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
