@@ -1,3 +1,4 @@
+"""fmri data processing"""""
 # fmri.py
 #      neuroscope project
 # by: Noah Syrkis
@@ -22,7 +23,10 @@ DATA_DIR = "data/"
 
 def fmri_data(hem: str) -> str:
     """given a hemisphere, return the fmri data directory"""
-    return os.path.join( DATA_DIR, SUBJECT, "training_split", "training_fmri", hem + "h_training_fmri.npy" )
+    return os.path.join(
+        DATA_DIR, SUBJECT, "training_split",
+        "training_fmri", hem + "h_training_fmri.npy"
+                        )
 
 roi_dir = os.path.join(DATA_DIR, SUBJECT, "roi_masks")
 mapping_files = [

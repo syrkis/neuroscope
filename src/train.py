@@ -14,7 +14,7 @@ import optax
 opt = optax.adam(1e-3)
 
 
-def train(params, metrics, config, args, train_loader, val_loader):
+def train(params, metrics, config, args, k_fold):
     opt_state = opt.init(params)
     params, metrics = train_steps(
         params, metrics, train_loader, val_loader, opt_state, args.n_steps

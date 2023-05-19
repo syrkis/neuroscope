@@ -1,3 +1,4 @@
+"""plotting functions for neuroscope"""
 # plots.py
 #     neuroscope plots
 # by: Noah Syrkis
@@ -98,8 +99,7 @@ def plot_graph(graph: jraph.GraphsTuple) -> None:
             )
         ],
     )
-    data = [edge_trace, node_trace]
-    fig = go.Figure(data=data, layout=layout)
+    fig = go.Figure(data=[edge_trace, node_trace], layout=layout)
     fig.show()
 
 

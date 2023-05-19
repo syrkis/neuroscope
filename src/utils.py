@@ -1,5 +1,6 @@
+"""utility functions for neuroscope project"""""
 # utils.py
-#   algonauts project
+#   neuroscope project
 # by: Noah Syrkis
 
 # imports
@@ -23,8 +24,8 @@ VAL_CAT_FILE = os.path.join(COCO_DIR, "instances_val2017.json")
 TRAIN_CAP_FILE = os.path.join(COCO_DIR, "captions_train2017.json")
 VAL_CAP_FILE = os.path.join(COCO_DIR, "captions_val2017.json")
 
-make_cats = False
-make_coco_metas = False
+MAKE_CATS = False
+MAKE_COCO_METAS = False
 
 rois = [
     "V1v",
@@ -60,7 +61,7 @@ rois = [
     "parietal",
 ]
 
-if make_cats:
+if MAKE_CATS:
     coco = COCO(VAL_CAT_FILE)
     cats = coco.loadCats(coco.getCatIds())
     with open(os.path.join(DATA_DIR, "coco_cats.json"), "w") as f:
@@ -142,7 +143,7 @@ def extract_meta(captions_coco, instances_coco, merged_anns, nds_coco_img_ids):
     return merged_anns
 
 
-if make_coco_metas:
+if MAKE_COCO_METAS:
     train_instances_coco = COCO(TRAIN_CAT_FILE)
     val_instances_coco = COCO(VAL_CAT_FILE)
     train_captions_coco = COCO(TRAIN_CAP_FILE)

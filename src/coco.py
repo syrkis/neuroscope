@@ -1,3 +1,4 @@
+"""functions for getting coco meta data for the algonauts subset"""
 # coco.py
 #   coco data set stuff
 # by: Noah Syrkis

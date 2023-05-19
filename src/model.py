@@ -5,7 +5,7 @@
 # imports
 import jax
 from jax import numpy as jnp
-from jax import random, grad, jit, vmap
+from jax import random
 
 
 # init_params
@@ -18,9 +18,7 @@ def init_mlp(layer_sizes, rng):
     return params
 
 
-def init_cnn(
-    config, rng
-):  # kernel dim is [out_channels, in_channels, kernel_size, kernel_size]
+def init_cnn(config, rng):
     params = []
     channel_sizes = [config["data"]["n_channels"]] + config["model"]["hyperparams"][
         "channel_sizes"
@@ -41,7 +39,7 @@ def init_cnn(
 
 def forward_cnn(params, x):
     activations = x
-    for w, b in params:
+    for w, _ in params:
         outputs = conv(activations, w)  # + b
         activations = jax.nn.relu(outputs)
     return jax.nn.sigmoid(outputs)

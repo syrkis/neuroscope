@@ -3,15 +3,15 @@
 # by: Noah Syrkis
 
 # imports
-from src.utils import get_files
-from src.fmri import lh_fmri, rh_fmri, get_multi_roi_mask
-from src.coco import preprocess, get_meta_data, c_to_one_hot
 from jax import numpy as jnp
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
+from src.utils import get_files
+from src.fmri import lh_fmri, rh_fmri, get_multi_roi_mask
+from src.coco import preprocess, get_meta_data, c_to_one_hot
 
 # batch_loader
 def get_loaders(args, config):  # TODO: allow for loading and mixing multiple subjects

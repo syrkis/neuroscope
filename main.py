@@ -1,24 +1,23 @@
+"""main file for neuroscope project"""""
 # main.py
-#   algonauts project
+#   neuroscope project
 # by: Noah Syrkis
 
 # imports
+import jax
 from src import get_setup, init_params
 from src.data import get_loaders
 from src.train import train
-import jax.numpy as jnp
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 
 
-# main function
 def main():
+    """main function"""
     args, config = get_setup()
     k_fold, _ = get_loaders(args, config)
-    # rng = jax.random.PRNGKey(0)
-    # params = init_params(config, rng)
-    # metrics = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
-    # params, metrics = train(params, metrics, config, args, k_fold)
+    rng = jax.random.PRNGKey(0)
+    params = init_params(config, rng)
+    metrics = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
+    params, metrics = train(params, metrics, config, args, k_fold)
 
 
 # run main()
