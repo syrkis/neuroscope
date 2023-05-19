@@ -12,5 +12,5 @@ __all__ = [
     "train",
     "init_params",
     "plot_metrics",
-    "plot_graph"
+    "plot_graph",
 ]

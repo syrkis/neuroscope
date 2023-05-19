@@ -184,5 +184,3 @@ def plot_metrics(metrics):
     axes[1].set_title("accuracy")
     axes[1].legend()
     plt.show()
-
-

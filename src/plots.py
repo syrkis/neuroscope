@@ -9,28 +9,40 @@ import plotly.graph_objects as go
 import networkx as nx
 import igraph as ig
 import jraph
-from nilearn import plotting, datasets
+from nilearn import plotting
+from tqdm import tqdm
+from src.fmri import (
+    fsaverage_roi,
+    fsaverage_roi_response_to_image,
+    atlas,
+    connectome_from_roi_response,
+)
+
 
 # functions
-def connectome_to_nx_graph(connectome):
-    # given a jraph graph, return a nx graph
+def connectome_to_nx_graph(connectome: jraph.GraphsTuple) -> nx.Graph:
+    """convert a jraph graph to a networkx graph"""
     nx_graph = nx.Graph()
     nx_graph.add_nodes_from(range(connectome.n_node))
-    edges = [(int(connectome.senders[i]), int(connectome.receivers[i])) for i in range(connectome.n_edge)]
+    edges = [
+        (int(connectome.senders[i]), int(connectome.receivers[i]))
+        for i in range(connectome.n_edge)
+    ]
     nx_graph.add_edges_from(edges)
     return nx_graph
 
+
 def plot_graph(graph: jraph.GraphsTuple) -> None:
-    # visualize the connectome
+    """plot a jraph graph"""
     G = ig.Graph.from_networkx(connectome_to_nx_graph(graph))
-    pos = G.layout("kk", dim=3)
+    pos = G.layout("fr", dim=3)
     Xn, Yn, Zn = zip(*pos)
     Xe, Ye, Ze = [], [], []
     for e in G.get_edgelist():
         Xe += [pos[e[0]][0], pos[e[1]][0], None]
         Ye += [pos[e[0]][1], pos[e[1]][1], None]
         Ze += [pos[e[0]][2], pos[e[1]][2], None]
-    
+
     edge_trace = go.Scatter3d(
         x=Xe,
         y=Ye,
@@ -67,7 +79,6 @@ def plot_graph(graph: jraph.GraphsTuple) -> None:
         title="",
         width=1500,
         height=1000,
-        # black background
         paper_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
         scene=dict(xaxis=dict(axis), yaxis=dict(axis), zaxis=dict(axis)),
@@ -93,7 +104,7 @@ def plot_graph(graph: jraph.GraphsTuple) -> None:
 
 
 def plot_regions(rois, hem, img=None):
-    # if variable called view exists, close it
+    """plot a list of rois on the given hemisphere"""
     if img is None:
         surface = np.zeros(fsaverage_roi_response_to_image(rois[0], img, hem).shape[0])
         for roi in rois:
@@ -116,10 +127,8 @@ def plot_regions(rois, hem, img=None):
     return view.resize(height=900, width=1400)
 
 
-# plot_regions(rois, "left", img=2)
-
 def plot_region(roi, hem, img=None):
-    # if variable called view exists, close it
+    """plot a roi on the given hemisphere"""
     if img is None:
         surface = fsaverage_roi(roi, hem)
     else:
@@ -133,4 +142,29 @@ def plot_region(roi, hem, img=None):
         colorbar=True,
         title=roi + ", " + hem + " hemisphere",
     )
-    view.open_in_browser()
+    return view.resize(height=900, width=1400)
+
+
+def small_multiples_connectome(rois):
+    """plot a connectome for each roi in the given list"""
+    fig, axes = plt.subplots(3, 3, figsize=(27, 28), dpi=100)
+    for idx, ax in tqdm(enumerate(axes.flatten())):
+        connectome, _ = connectome_from_roi_response(
+            rois[idx], "left"
+        )
+        layout = nx.spring_layout(connectome, k=0.9)
+        nx.draw(
+            connectome,
+            pos=layout,
+            node_size=1,
+            node_color="white",
+            edge_color="white",
+            width=0.1,
+            ax=ax,
+        )
+        ax.set_title(rois[idx], color="white")
+        ax.axis("off")
+        ax.set_facecolor("black")
+    fig.tight_layout()
+    fig.set_facecolor("black")
+    fig.savefig("plots/connectomes.svg", facecolor="black", dpi=300)
