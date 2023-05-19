@@ -9,7 +9,7 @@ from jax import random
 
 
 # init_params
-def init_mlp(layer_sizes, rng):
+def init_mlp(layer_sizes, rng):  # TODO: switch to haiku
     params = []
     for n_in, n_out in zip(layer_sizes[:-1], layer_sizes[1:]):
         w = random.normal(rng, (n_in, n_out)) * jnp.sqrt(2 / n_in)
