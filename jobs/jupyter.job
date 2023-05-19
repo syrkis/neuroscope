@@ -40,4 +40,4 @@ module --ignore-cache load CUDA/11.1.1-GCC-10.2.0
 # DON'T USE ADDRESS BELOW.
 # DO USE TOKEN BELOW
 # TOKEN FROM ENVIRONMENT VARIABLE
-srun singularity exec --nv container.sif jupyter lab --no-browser --port=${port} --ip=0.0.0.0 --NotebookApp.token=qwerty12345
+srun singularity exec --nv container.sif jupyter lab --no-browser --port=${port} --ip=0.0.0.0
