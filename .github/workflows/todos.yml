@@ -1,4 +1,4 @@
-name: TODO workflow
+name: TDG
 on: [push, pull_request]
 jobs:
   build:
@@ -12,3 +12,10 @@ jobs:
         REPO: ${{ github.repository }}
         SHA: ${{ github.sha }}
         REF: ${{ github.ref }}
+        LABEL: "my label"
+        MIN_WORDS: 3
+        MIN_CHARACTERS: 40
+        ADD_LIMIT: 1
+        CLOSE_LIMIT: 1
+        ROOT: "src"
+        INCLUDE_PATTERN: "\\.(py|ipynb)$"
