@@ -9,7 +9,7 @@ from jax import random
 import haiku as hk
 
 
-# TODO: create haiku based linear model that deals with all 3 modalities
+# TODO: build haiku modules for the three modalities
 # init_params
 def init_mlp(layer_sizes, rng):  # TODO: switch to haiku
     params = []

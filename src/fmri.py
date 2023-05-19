@@ -143,3 +143,5 @@ def connectivity_matrix_to_connectome(connectivity_matrix):
     np.fill_diagonal(connectivity_matrix, 0)
     graph = nx.from_numpy_array(connectivity_matrix)
     return graph, connectivity_matrix
+
+# TODO: add a function to get the connectome for a given roi for a particular image
