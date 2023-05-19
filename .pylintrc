@@ -1,4 +1,9 @@
 [MASTER]
+enable=todo-comments
+
+[TODO]
+# List of note tags to take in consideration, separated by a comma.
+notes=TODO, FIXME, XXX, BUG
 
 # Specify a configuration file.
 # rcfile=
