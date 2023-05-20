@@ -10,7 +10,7 @@ from src.model import loss_fn
 
 
 # evaluate
-def evaluate(params, train_loader, val_loader, steps=20):
+def evaluate(params, train_loader, val_loader, steps=2):
     train_loss, val_loss = [], []
     for _ in range(steps):
         img, cat, sup, cap, fmri = next(train_loader)  # training
@@ -21,3 +21,9 @@ def evaluate(params, train_loader, val_loader, steps=20):
         train_loss=np.mean(train_loss),
         val_loss=np.mean(val_loss),
     )
+
+def save_if_best(params, best_loss, val_loss):
+    if val_loss < best_loss:
+        best_loss = val_loss
+        np.save('best_params.npy', params)
+    return best_loss

@@ -1,6 +1,6 @@
 data:
   large_image_size: 425
-  small_image_size: 256
+  small_image_size: 32
   n_channels: 3
   n_classes: 80
 
