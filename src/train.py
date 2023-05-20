@@ -19,27 +19,28 @@ rng = hk.PRNGSequence(jax.random.PRNGKey(42))
 # functions
 def train(k_fold, config):
     """train function"""
-    wandb.init(project="neuroscope", entity='syrkis',
-               config=config, group='k_fold')
-    for fold_idx, fold in enumerate(k_fold):
+    group_name = wandb.util.generate_id()
+    for fold in k_fold:
         train_loader, val_loader = fold
-        img, cat, _, _, fmri = next(train_loader)
+        img, cat, _, _, _ = next(train_loader)
         params = init(next(rng), img, cat)
         opt_state = opt.init(params)
-        params = train_fold(params, train_loader, val_loader, opt_state, fold_idx)
+        params = train_fold(params, train_loader, val_loader, opt_state, group_name, config)
     wandb.finish()
     return params
         
 
-def train_fold(params, train_loader, val_loader, opt_state, fold_idx, steps=100):
+def train_fold(params, train_loader, val_loader, opt_state, group_name, config, steps=100):
     """train_fold function"""
+    wandb.init(project="neuroscope", entity='syrkis', config=config, group=group_name)
     pbar = tqdm(range(steps))
     for step in pbar:
-        img, cat, sup, cap, fmri = next(train_loader)
+        img, cat, _, _, fmri = next(train_loader)
         params, opt_state = update(params, img, cat, fmri, opt_state)
         if step % (steps // 10) == 0:
             metrics = evaluate(params, train_loader, val_loader)
-            wandb.log(metrics, step=fold_idx)
+            wandb.log(metrics, step=step)
+    wandb.finish()
     return params
 
 
