@@ -3,63 +3,50 @@
 # by: Noah Syrkis
 
 # imports
-from src.model import loss_fn, predict
-from jax import numpy as jnp
-import numpy as np
-from jax import grad, jit
-from tqdm import tqdm
+import jax
+from jax import grad
+import haiku as hk
 import optax
+import wandb
+from tqdm import tqdm
+from src.model import loss_fn, init
+from src.eval import evaluate
 
-
+# globals
 opt = optax.adam(1e-3)
+rng = hk.PRNGSequence(jax.random.PRNGKey(42))
 
+# functions
+def train(k_fold, config):
+    """train function"""
+    group_name = wandb.util.generate_id()
+    for fold in k_fold:
+        train_loader, val_loader = fold
+        img, cat, _, _, _ = next(train_loader)
+        params = init(next(rng), img, cat)
+        opt_state = opt.init(params)
+        params = train_fold(params, train_loader, val_loader, opt_state, group_name, config)
+    wandb.finish()
+    return params
+        
 
-def train(params, metrics, config, args, k_fold):
-    opt_state = opt.init(params)
-    params, metrics = train_steps(
-        params, metrics, train_loader, val_loader, opt_state, args.n_steps
-    )
-    return params, metrics
-
-
-def train_steps(params, metrics, train_loader, val_loader, opt_state, n_steps):
-    pbar = tqdm(range(n_steps))
+def train_fold(params, train_loader, val_loader, opt_state, group_name, config, steps=100):
+    """train_fold function"""
+    wandb.init(project="neuroscope", entity='syrkis', config=config, group=group_name)
+    pbar = tqdm(range(steps))
     for step in pbar:
-        x, y, _, _, _, _ = next(train_loader)
-        params, opt_state = update(params, x, y, opt_state)
-        if step % (n_steps // 10) == 0:
-            metrics = evaluate(params, train_loader, val_loader, metrics)
-            pbar.set_description(
-                f"train loss: {metrics['train_loss'][-1]:.4f}, train acc: {metrics['train_acc'][-1]:.4f}, val loss: {metrics['val_loss'][-1]:.4f}, val acc: {metrics['val_acc'][-1]:.4f}"
-            )
-    return params, metrics
+        img, cat, _, _, fmri = next(train_loader)
+        params, opt_state = update(params, img, cat, fmri, opt_state)
+        if step % (steps // 10) == 0:
+            metrics = evaluate(params, train_loader, val_loader)
+            wandb.log(metrics, step=step)
+    wandb.finish()
+    return params
 
 
-@jit
-def update(params, x, y, opt_state):
-    grads = grad(loss_fn)(params, x, y)
+@jax.jit
+def update(params, img, cat, fmri, opt_state):
+    grads = grad(loss_fn)(params, img, cat, fmri)
     updates, opt_state = opt.update(grads, opt_state)
     new_params = optax.apply_updates(params, updates)
     return new_params, opt_state
-
-
-def accuracy(params, x, y):
-    preds = predict(params, x)
-    return jnp.mean(preds == y)
-
-
-def evaluate(params, train_loader, valid_loader, metrics, steps=1):
-    # metrics is dict of lists of val loss val acc train loss train acc
-    train_loss, train_acc, valid_loss, valid_acc = [], [], [], []
-    for _ in range(steps):
-        train_x, train_y, _, _ = next(train_loader)
-        train_loss.append(loss_fn(params, train_x, train_y))
-        train_acc.append(accuracy(params, train_x, train_y))
-        valid_x, valid_y, _, _ = next(valid_loader)
-        valid_loss.append(loss_fn(params, valid_x, valid_y))
-        valid_acc.append(accuracy(params, valid_x, valid_y))
-    metrics["train_loss"].append(np.mean(train_loss))
-    metrics["train_acc"].append(np.mean(train_acc))
-    metrics["val_loss"].append(np.mean(valid_loss))
-    metrics["val_acc"].append(np.mean(valid_acc))
-    return metrics
