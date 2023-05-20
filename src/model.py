@@ -5,41 +5,35 @@
 # imports
 import jax
 from jax import numpy as jnp
-from jax import random
-import optax
 import haiku as hk
 
 
-# globals
-opt = optax.adam(1e-3)  # TODO: get lr from config
-
-
 # TODO: build haiku modules for the three modalities
-def network_fn(img, cat):
+def network_fn(img, cat, fmri):
     """network function"""
-    img = image_network_fn(img)
-    cat = category_network_fn(cat)
-    return fmri_network_fn(img, cat)
+    img = image_network_fn(img, cat, fmri)
+    cat = category_network_fn(img, cat, fmri)
+    return fmri_network_fn(img, cat, fmri)
 
 
-def fmri_network_fn(img, cat):
+def fmri_network_fn(img, cat, fmri):
     """network function"""
     mlp = hk.Sequential([
+        hk.Linear(256 * 2), jax.nn.relu,
         hk.Linear(256), jax.nn.relu,
-        hk.Linear(256), jax.nn.relu,
-        hk.Linear(256), jax.nn.relu,
+        hk.Linear(fmri.shape[-1]), jax.nn.relu,
     ])
     return mlp(jnp.concatenate((img, cat), axis=1))
 
 
-def image_network_fn(x):
+def image_network_fn(img):
     """network function"""
-    x = x.reshape(x.shape[0], -1)
+    img = img.reshape(img.shape[0], -1)
     mlp = hk.Sequential([
-        hk.Linear(256), jax.nn.relu,
+        hk.Linear(img.shape[-1]), jax.nn.relu,
         hk.Linear(256), jax.nn.relu,
     ])
-    return mlp(x)
+    return mlp(img)
 
 def category_network_fn(x):
     """network function"""
@@ -49,17 +43,9 @@ def category_network_fn(x):
     ])
     return mlp(x)
 
+init, forward = hk.without_apply_rng(hk.transform(network_fn))
 
-def loss_fn(params, batch):
+def loss_fn(params, img, cat, fmri):
     """loss function"""
-    img, cat, fmri = batch
-    pred = network_fn(params, img, cat)
-    return jnp.mean((pred - fmri) ** 2)
-
-
-@jax.jit
-def evaluate(params, batch):
-    """evaluate function"""
-    img, cat, fmri = batch
-    pred = network_fn(params, img, cat)
+    pred = forward(params, img, cat, fmri)
     return jnp.mean((pred - fmri) ** 2)

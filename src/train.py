@@ -8,35 +8,40 @@ from jax import grad
 import haiku as hk
 import optax
 import wandb
-from src.model import opt, loss_fn, network_fn, evaluate
+from src.model import loss_fn, init
+from src.eval import evaluate
 
 # globals
 opt = optax.adam(1e-3)
-init, forward = hk.without_apply_rng(hk.transform(network_fn))
+rng = hk.PRNGSequence(42)
 
 
 # functions
 def train(k_fold, config):
     """train function"""
-    wandb.init(project="neuroscope", entry='syrkis', config=config)
+    # wandb.init(project="neuroscope", entity='syrkis', config=config)
     for fold in k_fold:
         train_loader, val_loader = fold
-        params = init(jax.random.PRNGKey(42), next(train_loader))
-        params = train_fold(params, train_loader, val_loader)
-    wandb.finish()
+        img, cat, _, _, fmri = next(train_loader)
+        params = init(next(rng), img, cat, fmri)
+        opt_state = opt.init(params)
+        params = train_fold(params, train_loader, val_loader, opt_state)
+    # wandb.finish()
+    return params
         
 
-def train_fold(params, train_loader, val_loader, state, steps=10):
+def train_fold(params, train_loader, val_loader, opt_state, steps=10):
     """train_fold function"""
     for step in range(steps):
-        params = update(params, next(train_loader), state)
+        img, cat, sup, cap, fmri = next(train_loader)
+        params = update(params, img, cat, fmri, opt_state)
         if step % (steps // 100) == 0:
             wandb.log(step, evaluate(params, train_loader, val_loader))  # TODO: log multiple folds in one run
+    return params
 
 
-@jax.jit
-def update(params, batch, opt_state):
-    grads = grad(loss_fn)(params, batch)
+def update(params, img, cat, fmri, opt_state):
+    grads = grad(loss_fn)(params, img, cat, fmri)
     updates, opt_state = opt.update(grads, opt_state)
     new_params = optax.apply_updates(params, updates)
     return new_params, opt_state
