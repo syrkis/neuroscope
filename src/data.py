@@ -79,4 +79,4 @@ def get_loader(images, args, meta_data, img_files):
         ]  # drop last batch if it's not full
         for i in range(0, len(perm), args.batch_size):
             idxs = perm[i : i + args.batch_size]
-            yield images[idxs], cats[idxs], supers[idxs], captions[idxs], fmri[idxs]
+            yield images[idxs], cats[idxs], fmri[idxs]  # supers[idxs], captions[idxs], fmri[idxs]
