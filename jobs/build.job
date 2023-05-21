@@ -9,7 +9,6 @@
 #SBATCH --account=students         # account
 
 
-module load singularity
+srun rm -f container.sif
 
-srun rm container.sif
 srun singularity build container.sif docker://syrkis/neuroscope
