@@ -16,45 +16,26 @@ from src.coco import preprocess, get_meta_data, c_to_one_hot
 # batch_loader
 def get_loaders(args, config): 
     """return a test data loader, and a k-fold cross validation generator"""
-    image_size = config["data"]["image_size"]
     meta_data = get_meta_data()
-    images = []
-    img_files = [f for f in get_files(args.subject) if f.endswith(".png")][
-        : args.n_samples
-    ]
-    for f in tqdm(img_files):
-        images.append(preprocess(Image.open(f), image_size))
-    images = jnp.array(images)
-    train_idxs, test_idxs = map(
-        jnp.array, train_test_split(range(len(images)), test_size=0.2, random_state=42)
-    )
-    test_loader = get_data(
-        images[test_idxs], args, meta_data, [img_files[idx] for idx in test_idxs]
-    )
-    return (
-        k_fold_fn(
-            images[train_idxs], args, meta_data, [img_files[idx] for idx in train_idxs]
-        ),
-        test_loader,
-    )
+    img_files = [f for f in get_files(args.subject) if f.endswith(".png")][: args.n_samples]
+    images = jnp.array([preprocess(Image.open(f), config['data']['image_size']) for f in tqdm(img_files)])
+    train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.2, random_state=42))
+    train_img_files = [img_files[idx] for idx in train_idxs]
+    folds = get_folds(images[train_idxs], args, meta_data, train_img_files, k=5)
+    test_img_files = [img_files[idx] for idx in test_idxs]
+    test_data = get_data(images[test_idxs], args, meta_data, test_img_files)
+    return test_data, folds, test_img_files
 
 
 # cross validation
-def k_fold_fn(images, args, meta_data, img_files, k=5):
+# TODO: split into folds, and iterate through and concatenate.
+def get_folds(images, args, meta_data, img_files, k=5):
     """return a k-fold cross validation generator"""
     folds = []
+    fold_idxs = np.array_split(np.arange(len(images)), k)
     for i in range(k):
-        train_idxs, val_idxs = map(
-            jnp.array,
-            train_test_split(range(len(images)), test_size=0.2, random_state=i),
-        )
-        train_data = get_data(
-            images[train_idxs], args, meta_data, [img_files[idx] for idx in train_idxs]
-        )
-        val_data = get_data(
-            images[val_idxs], args, meta_data, [img_files[idx] for idx in val_idxs]
-        )
-        folds.append((train_data, val_data))
+        fold = get_data(images[fold_idxs[i]], args, meta_data, [img_files[idx] for idx in fold_idxs[i]])
+        folds.append(fold)
     return folds
 
 
