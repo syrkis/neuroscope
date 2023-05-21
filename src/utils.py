@@ -119,6 +119,7 @@ def get_setup(args_list=None):
     if args.machine == "local":
         # config['model']['hyperparams'] = config['model']['hyperparams']['small']
         config["data"]["image_size"] = config["data"]["small_image_size"]
+    config['batch_size'] = args.batch_size
     return args, config
 
 

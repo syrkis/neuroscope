@@ -41,7 +41,6 @@ def get_folds(images, args, meta_data, img_files, k=5):
 
 def get_data(images, args, meta_data, img_files):
     """return a data loader combining images and fmri data, and adding COCO stuff"""
-
     lh_fmri_roi = lh_fmri[:, get_multi_roi_mask(args.rois, "left")]
     rh_fmri_roi = rh_fmri[:, get_multi_roi_mask(args.rois, "right")]
     fmri = jnp.concatenate((lh_fmri_roi, rh_fmri_roi), axis=1)
@@ -51,6 +50,7 @@ def get_data(images, args, meta_data, img_files):
     cats = jnp.array([c_to_one_hot(c) for c in cats])  # one-hot encoding
 
     perm = np.random.permutation(len(img_files))  # randomize order of images
+    perm = perm[: len(perm) - (len(perm) % args.batch_size)]
     return images[perm], cats[perm], fmri[perm]  # supers[perm], captions[perm], fmri[perm]
     # supers = meta_data.iloc[coco_ids]["supercategory"].values  # supercategory info
     # captions = meta_data.iloc[coco_ids]["captions"].values  # caption info

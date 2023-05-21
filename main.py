@@ -13,6 +13,7 @@ def main():
     """main function"""
     args, config = get_setup()
     folds, _ = get_loaders(args, config)
+    params_lst = train(folds, config)
 
 
 # run main()
