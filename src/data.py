@@ -32,7 +32,8 @@ def get_loaders(args, config):
 def get_folds(images, args, meta_data, img_files, k=5):
     """return a k-fold cross validation generator"""
     folds = []
-    fold_idxs = np.array_split(np.arange(len(images)), k)
+    n_samples = len(images) // k * k
+    fold_idxs = np.array_split(np.random.permutation(n_samples), k)
     for i in range(k):
         fold = get_data(images[fold_idxs[i]], args, meta_data, [img_files[idx] for idx in fold_idxs[i]])
         folds.append(fold)
@@ -48,9 +49,7 @@ def get_data(images, args, meta_data, img_files):
     coco_ids = [int(f.split(".")[0].split("-")[-1]) for f in img_files]  # coco meta ids
     cats = meta_data.iloc[coco_ids]["categories"].values  # category info
     cats = jnp.array([c_to_one_hot(c) for c in cats])  # one-hot encoding
-
     perm = np.random.permutation(len(img_files))  # randomize order of images
-    perm = perm[: len(perm) - (len(perm) % args.batch_size)]
     return images[perm], cats[perm], fmri[perm]  # supers[perm], captions[perm], fmri[perm]
     # supers = meta_data.iloc[coco_ids]["supercategory"].values  # supercategory info
     # captions = meta_data.iloc[coco_ids]["captions"].values  # caption info
