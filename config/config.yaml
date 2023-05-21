@@ -1,23 +1,6 @@
-data:
-  large_image_size: 425
-  small_image_size: 32
-  n_channels: 3
-  n_classes: 80
-
-models:
-  fmri2cat:
-    description: "mlp for mapping from fmri to category"
-    hyperparams:
-      layer_sizes: [128, 128]
-
-  img2cat:
-    description: "ConvNet for multi category classification"
-    hyperparams:
-      small:
-        channel_sizes: [8, 12, 16]
-        kernel_sizes: [4, 7, 9]
-        layer_sizes: [256, 128, 80]
-      large:
-        channel_sizes: [8, 12, 16]
-        kernel_sizes: [4, 7, 9]
-        layer_sizes: [4096, 128, 80]
+image_size: 32
+learning_rate: 1e-3
+batch_size: 4
+num_steps: 1000
+k_folds: 5
+dropout: 0.1
