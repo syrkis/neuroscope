@@ -24,7 +24,7 @@ def get_loaders(args, config):
     folds = get_folds(images[train_idxs], args, meta_data, train_img_files, k=5)
     test_img_files = [img_files[idx] for idx in test_idxs]
     test_data = get_data(images[test_idxs], args, meta_data, test_img_files)
-    return test_data, folds
+    return folds, test_data
 
 
 # cross validation
