@@ -54,7 +54,7 @@ def k_fold_fn(images, args, meta_data, img_files, k=5):
         val_data = get_data(
             images[val_idxs], args, meta_data, [img_files[idx] for idx in val_idxs]
         )
-        folds.append(train_data, val_data)
+        folds.append((train_data, val_data))
     return folds
 
 
