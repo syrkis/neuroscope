@@ -7,15 +7,16 @@
 import jax.numpy as jnp
 import numpy as np
 from src.model import loss_fn
+from src.train import get_batch
 
 
 # evaluate
-def evaluate(params, train_loader, val_loader, steps=2):
+def evaluate(params, train_data, val_data, steps=2):
     train_loss, val_loss = [], []
     for _ in range(steps):
-        img, cat, sup, cap, fmri = next(train_loader)  # training
+        img, cat, fmri = get_batch(train_data, 1)
         train_loss.append(loss_fn(params, img, cat, fmri))
-        img, cat, sup, cap, fmri = next(val_loader)  # validation
+        img, cat, fmri = get_batch(val_data, 1)
         val_loss.append(loss_fn(params, img, cat, fmri))
     return dict(
         train_loss=np.mean(train_loss),
