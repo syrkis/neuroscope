@@ -42,18 +42,20 @@ def get_loaders(args, config):
 # cross validation
 def k_fold_fn(images, args, meta_data, img_files, k=5):
     """return a k-fold cross validation generator"""
+    folds = []
     for i in range(k):
         train_idxs, val_idxs = map(
             jnp.array,
             train_test_split(range(len(images)), test_size=0.2, random_state=i),
         )
-        train_loader = get_data(
+        train_data = get_data(
             images[train_idxs], args, meta_data, [img_files[idx] for idx in train_idxs]
         )
-        val_loader = get_data(
+        val_data = get_data(
             images[val_idxs], args, meta_data, [img_files[idx] for idx in val_idxs]
         )
-        return train_loader, val_loader
+        folds.append(train_data, val_data)
+    return folds
 
 
 def get_data(images, args, meta_data, img_files):
