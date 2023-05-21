@@ -1,6 +1,7 @@
 data/
 logs/
 wandb/
+.ipynb_checkpoints/
 **/__pycache__
 outputs/
 **/*.sif
