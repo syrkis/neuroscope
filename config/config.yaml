@@ -1,7 +1,7 @@
 image_size: 64
 learning_rate: 1e-3
 batch_size: 32
-n_steps: 100
+n_steps: 1000
 k_folds: 5
 n_samples: -1
 dropout: 0.2
