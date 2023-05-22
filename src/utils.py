@@ -95,7 +95,7 @@ def get_files(subject, split="training"):
 def get_args(args):
     parser = ArgumentParser()
     parser.add_argument("--subject", type=str, default="subj05")
-    parser.add_argument("--rois", type=str, default="V1v,V2v,V3v")
+    parser.add_argument("--rois", type=str, default="V1v,V2v")
     parser.add_argument("--batch_size", type=int, default=0)
     parser.add_argument("--n_samples", type=int, default=0)
     parser.add_argument("--n_steps", type=int, default=0)
@@ -109,11 +109,21 @@ def get_setup(args_list=None):
     args = get_args(args_list)
     with open(os.path.join(ROOT_DIR, "config/config.yaml")) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+    with open(os.path.join(ROOT_DIR, "config/rois.yaml")) as f:
+        roi_config = yaml.load(f, Loader=yaml.FullLoader)
+    config["fmri_size"] = rois_to_fmri_size(args.rois.split(","), roi_config)
     config['batch_size'] = args.batch_size if args.batch_size else config['batch_size']
     config['n_samples'] = args.n_samples if args.n_samples else config['n_samples']
     config['n_steps'] = args.n_steps if args.n_steps else config['n_steps']
     config['image_size'] = args.image_size if args.image_size else config['image_size']
     return args, config
+
+def rois_to_fmri_size(rois, roi_config):
+    size = 0
+    for roi in rois:
+        size += roi_config['subj05']['left_hem'][roi]
+        size += roi_config['subj05']['right_hem'][roi]
+    return size
 
 
 def extract_meta(captions_coco, instances_coco, merged_anns, nds_coco_img_ids):

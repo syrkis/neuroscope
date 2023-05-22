@@ -6,10 +6,14 @@
 import jax
 from jax import numpy as jnp
 import haiku as hk
+from functools import partial
 
 
-# TODO: build haiku modules for the three modalities
-def network_fn(img, cat, config):
+def network_fn(config):
+    """network function"""
+    return partial(network_fn, config=config)
+
+def network(img, cat, config):
     """network function"""
     img = image_network_fn(img, cat, config)
     cat = category_network_fn(img, cat, config)
@@ -26,7 +30,7 @@ def fmri_network_fn(img, cat, config):
     return mlp(jnp.concatenate((img, cat), axis=1))
 
 
-def image_network_fn(img, config):
+def image_network_fn(img, cat, config):
     """network function"""
     img = img.reshape(img.shape[0], -1)
     mlp = hk.Sequential([
