@@ -101,8 +101,9 @@ def get_args_and_config(args_lst=None):
 
     # Create an argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument(f'--rois', type=str, default='V1v,V2v')
+    parser.add_argument(f'--rois', type=str, default='RSC')
     parser.add_argument(f'--subject', type=str, default='subj05')
+    parser.add_argument(f'--n_samples', type=int, default=0)
 
     def rois_to_fmri_size(rois, roi_config):
         size = 0
@@ -113,12 +114,16 @@ def get_args_and_config(args_lst=None):
 
     # Parse the arguments and return them as a dictionary
     if 'ipykernel' in sys.modules:
-        args_lst = [f'--{k}={v}' for k, v in {'rois': 'V1v,V2v', 'subject': 'subj05'}.items()]
+        args_dict = {'rois': 'RSC', 'subject': 'subj05', 'n_samples': -1}
+        args_lst = [f'--{k}={v}' for k, v in args_dict.items()]
         args = parser.parse_args(args=args_lst)
     else:
         args = vars(parser.parse_args())
 
+    config['n_samples'] = args.n_samples if args.n_samples else config['n_samples']
     config['fmri_size'] = rois_to_fmri_size(args.rois.split(','), rois)
+    config['rois'] = args.rois.replace(',', ', ')
+    config['subject'] = args.subject
     return args, config
 
 args, config = get_args_and_config()

@@ -20,27 +20,33 @@ def network_fn(img, cat):
 def fmri_network_fn(img, cat):
     """network function"""
     mlp = hk.Sequential([
-        hk.Linear(128 * 2), jax.nn.relu,
-        hk.Linear(128), jax.nn.relu,
-        hk.Linear(config['fmri_size']), jax.nn.relu,
+        hk.Linear(config['hidden_size'] * 2), jax.nn.gelu,
+        hk.Linear(config['hidden_size']), jax.nn.gelu,
+        hk.Linear(config['fmri_size'])
     ])
     return mlp(jnp.concatenate((img, cat), axis=1))
 
 
 def image_network_fn(img, cat):
     """network function"""
-    img = img.reshape(img.shape[0], -1)
-    mlp = hk.Sequential([
-        hk.Linear(img.shape[-1]), jax.nn.relu,
-        hk.Linear(128), jax.nn.relu,
+    cnn = hk.Sequential([
+        hk.Conv2D(16, kernel_shape=3, stride=2, padding="SAME"), jax.nn.gelu,
+        hk.Conv2D(32, kernel_shape=3, stride=2, padding="SAME"), jax.nn.gelu,
+        hk.Conv2D(64, kernel_shape=3, stride=2, padding="SAME"), jax.nn.gelu,
+        hk.Conv2D(128, kernel_shape=3, stride=2, padding="SAME"), jax.nn.gelu,
+        hk.Flatten(),
     ])
-    return mlp(img)
+    mlp = hk.Sequential([
+        hk.Linear(config['hidden_size']), jax.nn.gelu,
+        hk.Linear(config['hidden_size']), jax.nn.gelu,
+    ])
+    return mlp(cnn(img))
 
 def category_network_fn(img, cat):
     """network function"""
     mlp = hk.Sequential([
-        hk.Linear(128), jax.nn.relu,
-        hk.Linear(128), jax.nn.relu,
+        hk.Linear(config['hidden_size']), jax.nn.gelu,
+        hk.Linear(config['hidden_size']), jax.nn.gelu,
     ])
     return mlp(cat)
 

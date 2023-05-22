@@ -10,7 +10,7 @@ from src.model import loss_fn
 
 
 # evaluate
-def evaluate(params, train_data, val_data, get_batch_fn, steps=2):
+def evaluate(params, train_data, val_data, get_batch_fn, steps=10):
     train_loss, val_loss = [], []
     for _ in range(steps):
         img, cat, fmri = get_batch_fn(train_data, 1)
