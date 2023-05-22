@@ -10,6 +10,12 @@ from functools import partial
 from src.utils import config
 
 
+# constants
+rng = hk.PRNGSequence(jax.random.PRNGKey(42))
+dropout = lambda x: hk.dropout(rate=config['dropout'], rng=next(rng), x=x)
+identity = lambda x: x
+
+
 # functions
 def network_fn(img, cat, is_training):
     """network function"""
@@ -23,7 +29,7 @@ def fmri_network_fn(img, cat, is_training):
     mlp = hk.Sequential([
         hk.Linear(config['hidden_size'] * 2), jax.nn.gelu,
         hk.Linear(config['hidden_size']), jax.nn.gelu,
-        hk.dropout(config['dropout']) if is_training else hk.Identity(),
+        dropout if is_training else identity,
         hk.Linear(config['fmri_size'])
     ])
     return mlp(jnp.concatenate((img, cat), axis=1))
@@ -35,7 +41,7 @@ def image_network_fn(img, is_training):
         hk.Conv2D(16, kernel_shape=3, stride=2, padding="SAME"), jax.nn.gelu,
         hk.Conv2D(32, kernel_shape=3, stride=2, padding="SAME"), jax.nn.gelu,
         hk.Conv2D(64, kernel_shape=3, stride=2, padding="SAME"), jax.nn.gelu,
-        hk.dropout(config['dropout']) if is_training else hk.Identity(),
+        dropout if is_training else identity,
         hk.Conv2D(128, kernel_shape=3, stride=2, padding="SAME"),
         hk.Flatten(),
     ])
@@ -53,9 +59,9 @@ def category_network_fn(cat, is_training):
     ])
     return mlp(cat)
 
-train_forward = hk.transform(partial(network_fn, is_training=True)).apply
-infer_forward = hk.transform(partial(network_fn, is_training=False)).apply
-init = jax.jit(train_forward.init, static_argnums=2)
+train_forward = hk.without_apply_rng(hk.transform(partial(network_fn, is_training=True))).apply
+infer_forward = hk.without_apply_rng(hk.transform(partial(network_fn, is_training=False))).apply
+init = hk.transform(partial(network_fn, is_training=True)).init
 
 def loss_fn(pred, fmri):
     """loss function"""

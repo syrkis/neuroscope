@@ -118,7 +118,7 @@ def get_args_and_config(args_lst=None):
         args_lst = [f'--{k}={v}' for k, v in args_dict.items()]
         args = parser.parse_args(args=args_lst)
     else:
-        args = vars(parser.parse_args())
+        args = parser.parse_args()
 
     config['n_samples'] = args.n_samples if args.n_samples else config['n_samples']
     config['fmri_size'] = rois_to_fmri_size(args.rois.split(','), rois)
