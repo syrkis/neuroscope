@@ -12,14 +12,13 @@ import optax
 import wandb
 from typing import List, Tuple, Dict
 from functools import partial
-from src.model import network_fn, loss_fn
+from src.model import init, train_loss, train_forward
 from src.eval import evaluate
 
 
 # constants
 opt = optax.adam(1e-3)
 rng = hk.PRNGSequence(jax.random.PRNGKey(42))
-init, forward = hk.without_apply_rng(hk.transform(network_fn))
 
 # types
 Fold = Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]
