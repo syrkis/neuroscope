@@ -13,15 +13,16 @@ from src.utils import get_files
 from src.fmri import lh_fmri, rh_fmri, get_multi_roi_mask
 from src.coco import preprocess, get_meta_data, c_to_one_hot
 
+
 # batch_loader
 def get_loaders(args, config): 
     """return a test data loader, and a k-fold cross validation generator"""
     meta_data = get_meta_data()
     img_files = [f for f in get_files(args.subject) if f.endswith(".png")][: args.n_samples]
-    images = jnp.array([preprocess(Image.open(f), config['data']['image_size']) for f in tqdm(img_files)])
+    images = jnp.array([preprocess(Image.open(f), config['image_size']) for f in tqdm(img_files)])
     train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.2, random_state=42))
     train_img_files = [img_files[idx] for idx in train_idxs]
-    folds = get_folds(images[train_idxs], args, meta_data, train_img_files, k=5)
+    folds = get_folds(images[train_idxs], args, meta_data, train_img_files, k=config['k_folds'])
     test_img_files = [img_files[idx] for idx in test_idxs]
     test_data = get_data(images[test_idxs], args, meta_data, test_img_files)
     return folds, test_data

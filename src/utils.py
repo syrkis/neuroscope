@@ -93,33 +93,26 @@ def get_files(subject, split="training"):
 
 # get command line arguments
 def get_args(args):
-    models = ["fmri2cat", "img2cat", "fmri2img", "img2fmri"]
     parser = ArgumentParser()
-    parser.add_argument("--machine", type=str, default="local")
-    parser.add_argument("--model", type=str, default="fmri2cat")
     parser.add_argument("--subject", type=str, default="subj05")
     parser.add_argument("--rois", type=str, default="V1v,V2v,V3v")
-    parser.add_argument("--batch_size", type=int, default=16)
-    parser.add_argument("--n_samples", type=int, default=256)
-    parser.add_argument("--n_steps", type=int, default=100)
+    parser.add_argument("--batch_size", type=int, default=0)
+    parser.add_argument("--n_samples", type=int, default=0)
+    parser.add_argument("--n_steps", type=int, default=0)
+    parser.add_argument("--image_size", type=int, default=0)
     args = parser.parse_args(args)
-    assert args.model in models, f"--model must be one of {models}"
     return args
 
 
 # get config file
 def get_setup(args_list=None):
     args = get_args(args_list)
-    with open(os.path.join(ROOT_DIR, "config.yaml")) as f:
+    with open(os.path.join(ROOT_DIR, "config/config.yaml")) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    config["model"] = config["models"][args.model]
-    if args.machine == "hpc":
-        # config['model']['hyperparams'] = config['model']['hyperparams']['large']
-        config["data"]["image_size"] = config["data"]["large_image_size"]
-    if args.machine == "local":
-        # config['model']['hyperparams'] = config['model']['hyperparams']['small']
-        config["data"]["image_size"] = config["data"]["small_image_size"]
-    config['batch_size'] = args.batch_size
+    config['batch_size'] = args.batch_size if args.batch_size else config['batch_size']
+    config['n_samples'] = args.n_samples if args.n_samples else config['n_samples']
+    config['n_steps'] = args.n_steps if args.n_steps else config['n_steps']
+    config['image_size'] = args.image_size if args.image_size else config['image_size']
     return args, config
 
 

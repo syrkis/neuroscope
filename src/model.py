@@ -9,24 +9,24 @@ import haiku as hk
 
 
 # TODO: build haiku modules for the three modalities
-def network_fn(img, cat):
+def network_fn(img, cat, config):
     """network function"""
-    img = image_network_fn(img, cat)
-    cat = category_network_fn(img, cat)
-    return fmri_network_fn(img, cat)
+    img = image_network_fn(img, cat, config)
+    cat = category_network_fn(img, cat, config)
+    return fmri_network_fn(img, cat, config)
 
 
-def fmri_network_fn(img, cat):
+def fmri_network_fn(img, cat, config):
     """network function"""
     mlp = hk.Sequential([
         hk.Linear(128 * 2), jax.nn.relu,
         hk.Linear(128), jax.nn.relu,
-        hk.Linear(3231), jax.nn.relu,
+        hk.Linear(config['fmri_size']), jax.nn.relu,
     ])
     return mlp(jnp.concatenate((img, cat), axis=1))
 
 
-def image_network_fn(img, cat):
+def image_network_fn(img, config):
     """network function"""
     img = img.reshape(img.shape[0], -1)
     mlp = hk.Sequential([
@@ -35,7 +35,7 @@ def image_network_fn(img, cat):
     ])
     return mlp(img)
 
-def category_network_fn(img, cat):
+def category_network_fn(img, cat, config):
     """network function"""
     mlp = hk.Sequential([
         hk.Linear(128), jax.nn.relu,
