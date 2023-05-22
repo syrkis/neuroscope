@@ -12,13 +12,14 @@ import optax
 import wandb
 from typing import List, Tuple, Dict
 from functools import partial
-from src.model import loss_fn, init
+from src.model import network_fn, loss_fn
 from src.eval import evaluate
 
 
 # constants
 opt = optax.adam(1e-3)
 rng = hk.PRNGSequence(jax.random.PRNGKey(42))
+init, forward = hk.without_apply_rng(hk.transform(network_fn))
 
 # types
 Fold = Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]
@@ -71,7 +72,8 @@ def make_fold(folds: List[Fold], fold: int) -> Batch:
 
 @jit
 def update(params: hk.Params, img: jnp.ndarray, cat: jnp.ndarray, fmri: jnp.ndarray, opt_state: optax.OptState) -> Tuple[hk.Params, optax.OptState]:
-    grads = grad(loss_fn)(params, img, cat, fmri)
+    pred = forward(params, img, cat)
+    grads = grad(loss_fn)(params, pred, fmri)
     updates, opt_state = opt.update(grads, opt_state)
     new_params = optax.apply_updates(params, updates)
     return new_params, opt_state

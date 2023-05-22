@@ -18,7 +18,7 @@ from src.coco import preprocess, get_meta_data, c_to_one_hot
 def get_loaders(args, config): 
     """return a test data loader, and a k-fold cross validation generator"""
     meta_data = get_meta_data()
-    img_files = [f for f in get_files(args.subject) if f.endswith(".png")][: args.n_samples]
+    img_files = [f for f in get_files(args.subject) if f.endswith(".png")][: config['n_samples']]
     images = jnp.array([preprocess(Image.open(f), config['image_size']) for f in tqdm(img_files)])
     train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.2, random_state=42))
     train_img_files = [img_files[idx] for idx in train_idxs]

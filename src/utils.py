@@ -5,7 +5,8 @@
 
 # imports
 import os
-from argparse import ArgumentParser
+import sys
+import argparse
 import json
 from pycocotools.coco import COCO
 from tqdm import tqdm
@@ -91,39 +92,37 @@ def get_files(subject, split="training"):
         return image_files
 
 
-# get command line arguments
-def get_args(args):
-    parser = ArgumentParser()
-    parser.add_argument("--subject", type=str, default="subj05")
-    parser.add_argument("--rois", type=str, default="V1v,V2v")
-    parser.add_argument("--batch_size", type=int, default=0)
-    parser.add_argument("--n_samples", type=int, default=0)
-    parser.add_argument("--n_steps", type=int, default=0)
-    parser.add_argument("--image_size", type=int, default=0)
-    args = parser.parse_args(args)
-    return args
+def get_args_and_config(args_lst=None):
+    # Load the YAML configuration file
+    with open('config/config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+    with open('config/rois.yaml', 'r') as f:
+        rois = yaml.safe_load(f)
 
+    # Create an argument parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument(f'--rois', type=str, default='V1v,V2v')
+    parser.add_argument(f'--subject', type=str, default='subj05')
 
-# get config file
-def get_setup(args_list=None):
-    args = get_args(args_list)
-    with open(os.path.join(ROOT_DIR, "config/config.yaml")) as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-    with open(os.path.join(ROOT_DIR, "config/rois.yaml")) as f:
-        roi_config = yaml.load(f, Loader=yaml.FullLoader)
-    config["fmri_size"] = rois_to_fmri_size(args.rois.split(","), roi_config)
-    config['batch_size'] = args.batch_size if args.batch_size else config['batch_size']
-    config['n_samples'] = args.n_samples if args.n_samples else config['n_samples']
-    config['n_steps'] = args.n_steps if args.n_steps else config['n_steps']
-    config['image_size'] = args.image_size if args.image_size else config['image_size']
+    def rois_to_fmri_size(rois, roi_config):
+        size = 0
+        for roi in rois:
+            size += roi_config['subj05']['left_hem'][roi]
+            size += roi_config['subj05']['right_hem'][roi]
+        return size
+
+    # Parse the arguments and return them as a dictionary
+    if 'ipykernel' in sys.modules:
+        args_lst = [f'--{k}={v}' for k, v in {'rois': 'V1v,V2v', 'subject': 'subj05'}.items()]
+        args = parser.parse_args(args=args_lst)
+    else:
+        args = vars(parser.parse_args())
+
+    config['fmri_size'] = rois_to_fmri_size(args.rois.split(','), rois)
     return args, config
 
-def rois_to_fmri_size(rois, roi_config):
-    size = 0
-    for roi in rois:
-        size += roi_config['subj05']['left_hem'][roi]
-        size += roi_config['subj05']['right_hem'][roi]
-    return size
+args, config = get_args_and_config()
+
 
 
 def extract_meta(captions_coco, instances_coco, merged_anns, nds_coco_img_ids):

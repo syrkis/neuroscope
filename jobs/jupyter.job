@@ -10,7 +10,18 @@
 #SBATCH --account=students
 # get tunneling info
 XDG_RUNTIME_DIR=""
+# Get the port numbers used by slurmctld and slurmd from slurm.conf
+slurmctld_port=$(grep "^SlurmctldPort" /etc/slurm/slurm.conf | awk '{print $2}')
+slurmd_port=$(grep "^SlurmdPort" /etc/slurm/slurm.conf | awk '{print $2}')
+
+# Generate a random port number between 8000 and 9999
 port=$(shuf -i8000-9999 -n1)
+
+# Check if the generated port number is already in use
+while netstat -atn | grep -q ":$port "; do
+    # Generate a new random port number if the current one is already in use
+    port=$(shuf -i8000-9999 -n1)
+done
 node=$(hostname -s)
 user=$(whoami)
 cluster=$(hostname -f | awk -F"." '{print $2}')

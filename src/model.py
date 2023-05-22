@@ -6,21 +6,18 @@
 import jax
 from jax import numpy as jnp
 import haiku as hk
-from functools import partial
+from src.utils import config
 
 
-def network_fn(config):
+# functions
+def network_fn(img, cat):
     """network function"""
-    return partial(network_fn, config=config)
-
-def network(img, cat, config):
-    """network function"""
-    img = image_network_fn(img, cat, config)
-    cat = category_network_fn(img, cat, config)
-    return fmri_network_fn(img, cat, config)
+    img = image_network_fn(img, cat)
+    cat = category_network_fn(img, cat)
+    return fmri_network_fn(img, cat)
 
 
-def fmri_network_fn(img, cat, config):
+def fmri_network_fn(img, cat):
     """network function"""
     mlp = hk.Sequential([
         hk.Linear(128 * 2), jax.nn.relu,
@@ -30,7 +27,7 @@ def fmri_network_fn(img, cat, config):
     return mlp(jnp.concatenate((img, cat), axis=1))
 
 
-def image_network_fn(img, cat, config):
+def image_network_fn(img, cat):
     """network function"""
     img = img.reshape(img.shape[0], -1)
     mlp = hk.Sequential([
@@ -39,7 +36,7 @@ def image_network_fn(img, cat, config):
     ])
     return mlp(img)
 
-def category_network_fn(img, cat, config):
+def category_network_fn(img, cat):
     """network function"""
     mlp = hk.Sequential([
         hk.Linear(128), jax.nn.relu,

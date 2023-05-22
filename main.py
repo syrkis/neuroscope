@@ -4,14 +4,14 @@
 # by: Noah Syrkis
 
 # imports
-from src import get_setup
+from src.utils import get_args_and_config
 from src.data import get_loaders
 from src.train import train
 
 
 def main():
     """main function"""
-    args, config = get_setup()
+    args, config = get_args_and_config()
     folds, _ = get_loaders(args, config)
     params_lst = train(folds, config)
 
