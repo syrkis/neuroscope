@@ -3,6 +3,6 @@ learning_rate: 1e-3
 batch_size: 32
 n_steps: 1000
 k_folds: 5
-n_samples: -1
+n_samples: 1024
 dropout: 0.2
 hidden_size: 128

@@ -102,7 +102,7 @@ def get_args_and_config(args_lst=None):
     # Create an argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument(f'--rois', type=str, default='RSC')
-    parser.add_argument(f'--subject', type=str, default='subj05')
+    parser.add_argument(f'--subject', type=str, default='subj05,subj01')
     parser.add_argument(f'--n_samples', type=int, default=0)
 
     def rois_to_fmri_size(rois, roi_config):
