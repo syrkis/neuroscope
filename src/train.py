@@ -13,7 +13,7 @@ import wandb
 from typing import List, Tuple, Dict
 from functools import partial
 from tqdm import tqdm
-from src.model import init, train_loss, train_forward
+from src.model import init, train_loss_fn, train_forward
 from src.eval import evaluate
 
 
@@ -72,7 +72,7 @@ def make_fold(folds: List[Fold], fold: int) -> Batch:
 
 @jit
 def update(params: hk.Params, batch: Batch, opt_state: optax.OptState) -> Tuple[hk.Params, optax.OptState]:
-    grads = grad(train_loss)(params, batch)
+    grads = grad(train_loss_fn)(params, batch)
     updates, opt_state = opt.update(grads, opt_state)
     new_params = optax.apply_updates(params, updates)
     return new_params, opt_state
