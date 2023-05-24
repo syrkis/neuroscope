@@ -15,11 +15,12 @@ from src.coco import preprocess, get_meta_data, c_to_one_hot
 
 # batch_loader
 def get_data(args, config): 
+    """return dictionary of data loaders for each subject"""
     data = {subject: None for subject in args.subjects.split(",")}
+    meta_data = get_meta_data()
     for subject in args.subjects.split(","):
         """return a test data loader, and a k-fold cross validation generator"""
-        meta_data = get_meta_data()
-        img_files = [f for f in get_files(args.subject) if f.endswith(".png")][: config['n_samples']]
+        img_files = [f for f in get_files(subject) if f.endswith(".png")][: config['n_samples']]
         images = jnp.array([preprocess(Image.open(f), config['image_size']) for f in tqdm(img_files)])
         train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.2, random_state=42))
         train_img_files = [img_files[idx] for idx in train_idxs]
@@ -27,11 +28,12 @@ def get_data(args, config):
         test_img_files = [img_files[idx] for idx in test_idxs]
         test_data = get_subject_data(images[test_idxs], args, meta_data, test_img_files, subject)
         data[subject] = (folds, test_data)
-    return folds, test_data
+    return data
 
 
 # TODO: make function that returns mixed data
 def get_mixed_subject_data(args, config):
+    """return a data loader combining images and fmri data, and adding COCO stuff"""
     data = get_data(args, config)
     mixed_data = []
     for key, value in data.items():
@@ -42,11 +44,12 @@ def get_mixed_subject_data(args, config):
 def get_folds(images, args, meta_data, img_files, subject, k=5):
     """return a k-fold cross validation generator"""
     folds = []
-    n_samples = len(images) // k * k
+    # ensure that each fold has the same number of samples
+    n_samples = (len(images) // k) * k
     fold_idxs = np.array_split(np.random.permutation(n_samples), k)
     for i in range(k):
-        img_files = [img_files[idx] for idx in fold_idxs[i]]
-        fold = get_subject_data(images[fold_idxs[i]], args, meta_data, img_files, subject)
+        fold_img_files = [img_files[idx] for idx in fold_idxs[i]]
+        fold = get_subject_data(images[fold_idxs[i]], args, meta_data, fold_img_files, subject)
         folds.append(fold)
     return folds
 
@@ -54,8 +57,8 @@ def get_folds(images, args, meta_data, img_files, subject, k=5):
 def get_subject_data(images, args, meta_data, img_files, subject):
     """return a data loader combining images and fmri data, and adding COCO stuff"""
     lh_fmri, rh_fmri = get_fmri(subject)
-    lh_fmri_roi = lh_fmri[:, get_multi_roi_mask(args.rois, "left")]
-    rh_fmri_roi = rh_fmri[:, get_multi_roi_mask(args.rois, "right")]
+    lh_fmri_roi = lh_fmri[:, get_multi_roi_mask(subject, args.rois, "left")]
+    rh_fmri_roi = rh_fmri[:, get_multi_roi_mask(subject, args.rois, "right")]
     fmri = jnp.concatenate((lh_fmri_roi, rh_fmri_roi), axis=1)
 
     coco_ids = [int(f.split(".")[0].split("-")[-1]) for f in img_files]  # coco meta ids

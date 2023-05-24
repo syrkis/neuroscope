@@ -98,7 +98,7 @@ def roi_to_roi_class(subject, roi):
 def roi_to_map_index(subject, roi):
     """given a roi, return the index of the roi mapping within the roi class"""
     mappings = get_mappings(subject) 
-    roi_class = roi_to_roi_class(roi)
+    roi_class = roi_to_roi_class(subject, roi)
     roi_map = mappings[roi_class]
     return {v: k for k, v in roi_map.items()}[
         roi
@@ -109,8 +109,8 @@ def get_roi_mask(subject, roi, hem, atlas="challenge"):
     """given a roi, return the roi mask for the given hemisphere"""
     challenge = get_challenge(subject)
     fsaverage = get_fsaverage(subject)
-    roi_class = roi_to_roi_class(roi)
-    roi_mapping = roi_to_map_index(roi)
+    roi_class = roi_to_roi_class(subject, roi)
+    roi_mapping = roi_to_map_index(subject, roi)
     atlas = challenge if atlas == "challenge" else fsaverage
     return atlas[f"{hem[0]}h.{roi_class}"] == roi_mapping
 
@@ -120,14 +120,14 @@ def get_multi_roi_mask(subject, rois, hem, atlas="challenge"):
     challenge = get_challenge(subject)
     roi_mask = np.zeros(len(challenge[hem[0] + "h.floc-bodies"])).astype(bool)
     for roi in rois.split(","):
-        roi_mask += get_roi_mask(roi, hem, atlas)
+        roi_mask += get_roi_mask(subject, roi, hem, atlas)
     return roi_mask
 
 
 def roi_response_to_image(subject, roi, idxs, hem):  # TODO: ensure correctness
     """given a roi, return the response to image for that roi in the given hemisphere"""
     lh_fmri, rh_fmri = get_fmri(subject)
-    roi_mask = get_roi_mask(roi, hem, atlas="challenge")
+    roi_mask = get_roi_mask(subject, roi, hem, atlas="challenge")
     if hem == "left":
         res = lh_fmri[:, roi_mask][idxs]
     if hem == "right":
@@ -138,7 +138,7 @@ def roi_response_to_image(subject, roi, idxs, hem):  # TODO: ensure correctness
 def fsaverage_roi(subject, roi, hem):  # TODO: ensure correctness
     """given a roi, return the roi mask for the given hemisphere"""
     fsaverage = get_fsaverage(subject)
-    roi_class = roi_to_roi_class(roi)
+    roi_class = roi_to_roi_class(subject, roi)
     fsaverage_roi_mask = fsaverage[f"{hem[0]}h.{roi_class}"] == roi_to_map_index(roi)
     return fsaverage_roi_mask.astype(int)
 
@@ -146,8 +146,8 @@ def fsaverage_roi(subject, roi, hem):  # TODO: ensure correctness
 def fsaverage_roi_response_to_image(subject, roi, img, hem):  # TODO: ensure correctness
     """given a roi, return the response to image for that roi in the given hemisphere"""
     lh_fmri, rh_fmri = get_fmri(subject)
-    fsaverage_roi_mask = get_roi_mask(roi, hem, atlas="fsaverage")
-    challenge_roi_mask = get_roi_mask(roi, hem, atlas="challenge")
+    fsaverage_roi_mask = get_roi_mask(subject, roi, hem, atlas="fsaverage")
+    challenge_roi_mask = get_roi_mask(subject, roi, hem, atlas="challenge")
     res = np.zeros(len(fsaverage_roi_mask))
     if hem == "left":
         res[np.where(fsaverage_roi_mask)[0]] = lh_fmri[
@@ -163,7 +163,7 @@ def fsaverage_roi_response_to_image(subject, roi, img, hem):  # TODO: ensure cor
 def connectome_from_roi_response(subject, roi, hem):  # this is wrong
     """given a roi, return the connectome for that roi in the given hemisphere"""
     lh_fmri, rh_fmri = get_fmri(subject)
-    roi_mask = get_roi_mask(roi, hem, atlas="challenge")
+    roi_mask = get_roi_mask(subject, roi, hem, atlas="challenge")
     fmri = lh_fmri if hem == "left" else rh_fmri
     roi_response = fmri[:, roi_mask]
     connectivity_measure = ConnectivityMeasure(kind="covariance")
