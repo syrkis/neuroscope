@@ -1,5 +1,5 @@
 # data.py
-#     algonauts project
+#     neuroscope project
 # by: Noah Syrkis
 
 # imports
@@ -22,7 +22,7 @@ def get_data(args, config):
         """return a test data loader, and a k-fold cross validation generator"""
         img_files = [f for f in get_files(subject) if f.endswith(".png")][: config['n_samples']]
         images = jnp.array([preprocess(Image.open(f), config['image_size']) for f in tqdm(img_files)])
-        train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.2, random_state=42))
+        train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.1, random_state=42))
         train_img_files = [img_files[idx] for idx in train_idxs]
         folds = get_folds(images[train_idxs], args, meta_data, train_img_files, subject, k=config['k_folds'])
         test_img_files = [img_files[idx] for idx in test_idxs]
@@ -57,14 +57,13 @@ def get_folds(images, args, meta_data, img_files, subject, k=5):
 def get_subject_data(images, args, meta_data, img_files, subject):
     """return a data loader combining images and fmri data, and adding COCO stuff"""
     lh_fmri, rh_fmri = get_fmri(subject)
-    lh_fmri_roi = lh_fmri[:, get_multi_roi_mask(subject, args.rois, "left")]
-    rh_fmri_roi = rh_fmri[:, get_multi_roi_mask(subject, args.rois, "right")]
-    fmri = jnp.concatenate((lh_fmri_roi, rh_fmri_roi), axis=1)
+    lh = lh_fmri[:, get_multi_roi_mask(subject, args.rois, "left")]
+    rh = rh_fmri[:, get_multi_roi_mask(subject, args.rois, "right")]
 
     coco_ids = [int(f.split(".")[0].split("-")[-1]) for f in img_files]  # coco meta ids
     cats = meta_data.iloc[coco_ids]["categories"].values  # category info
     cats = jnp.array([c_to_one_hot(c) for c in cats])  # one-hot encoding
     perm = np.random.permutation(len(img_files))  # randomize order of images
-    return images[perm], cats[perm], fmri[perm]  # supers[perm], captions[perm], fmri[perm]
+    return images[perm], cats[perm], lh[perm], rh[perm]  # supers[perm], captions[perm], fmri[perm]
     # supers = meta_data.iloc[coco_ids]["supercategory"].values  # supercategory info
     # captions = meta_data.iloc[coco_ids]["captions"].values  # caption info
