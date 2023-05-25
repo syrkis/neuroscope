@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - requirements.txt
+      - Dockerfile
 
 jobs:
   build-and-push:
