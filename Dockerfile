@@ -17,7 +17,7 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
 
 COPY requirements.txt .
 
-RUN python3.11 -m pip install -r requirements.txt
+RUN python3.11 -m pip install --no-cache-dir -r requirements.txt
 
 RUN python3.11 -m pip install --upgrade \
         "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
