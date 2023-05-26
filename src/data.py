@@ -22,11 +22,14 @@ def get_data(args, config):
         """return a test data loader, and a k-fold cross validation generator"""
         img_files = [f for f in get_files(subject) if f.endswith(".png")][: config['n_samples']]
         images = jnp.array([preprocess(Image.open(f), config['image_size']) for f in tqdm(img_files)])
+
         train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.1, random_state=42))
-        train_img_files = [img_files[idx] for idx in train_idxs]
+        train_img_files = [img_files[idx] for idx in train_idxs.tolist()]
         folds = get_folds(images[train_idxs], args, meta_data, train_img_files, subject, k=config['k_folds'])
-        test_img_files = [img_files[idx] for idx in test_idxs]
+
+        test_img_files = [img_files[idx] for idx in test_idxs.tolist()]
         test_data = get_subject_data(images[test_idxs], args, meta_data, test_img_files, subject)
+
         data[subject] = (folds, test_data)
     return data
 
