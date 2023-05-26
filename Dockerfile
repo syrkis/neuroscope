@@ -9,7 +9,7 @@ RUN apt-get update && \
 
 RUN apt-get update && \
     apt-get install -y \
-    python3.11 python3.11-distutils python3.11-dev libcupti-dev
+    python3.11 python3.11-distutils python3.11-dev
 
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python3.11 get-pip.py --force-reinstall && \
@@ -22,6 +22,6 @@ RUN python3.11 -m pip install --no-cache-dir  -r requirements.txt
 RUN python3.11 -m pip install --upgrade \
         "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
-RUN pip install --index-url https://download.pytorch.org/whl/cu119
+RUN python3.11 -m pip install --index-url https://download.pytorch.org/whl/cu119
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1
