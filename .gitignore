@@ -6,3 +6,4 @@ wandb/
 outputs/
 **/*.sif
 .vscode/
+results/

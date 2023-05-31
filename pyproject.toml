@@ -22,9 +22,9 @@ wandb = "^0.15.2"
 python-igraph = "^0.10.4"
 plotly = "^5.14.1"
 pycocotools = "^2.0.6"
+flax = "^0.6.10"
 torch = "^2.0.1"
 torchvision = "^0.15.2"
-flax = "^0.6.10"
 
 
 [build-system]
