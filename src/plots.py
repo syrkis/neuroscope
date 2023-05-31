@@ -103,16 +103,16 @@ def plot_graph(graph: jraph.GraphsTuple) -> None:
     fig.show()
 
 
-def plot_regions(rois, hem, img=None):
+def plot_regions(subject, rois, hem, img=None):
     """plot a list of rois on the given hemisphere"""
     if img is None:
-        surface = np.zeros(fsaverage_roi_response_to_image(rois[0], img, hem).shape[0])
+        surface = np.zeros(fsaverage_roi_response_to_image(subject, rois[0], img, hem).shape[0])
         for roi in rois:
-            surface += fsaverage_roi(roi, hem)
+            surface += fsaverage_roi(subject, roi, hem)
     else:
-        surface = np.zeros(fsaverage_roi_response_to_image(rois[0], img, hem).shape[0])
+        surface = np.zeros(fsaverage_roi_response_to_image(subject, rois[0], img, hem).shape[0])
         for roi in rois:
-            surface += fsaverage_roi_response_to_image(roi, img, hem)
+            surface += fsaverage_roi_response_to_image(subject, roi, img, hem)
     view = plotting.view_surf(
         surf_mesh=atlas["pial_" + hem],
         surf_map=surface,
