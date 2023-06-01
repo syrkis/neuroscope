@@ -18,12 +18,17 @@ def get_data(args, config):
     """return dictionary of data loaders for each subject"""
     data = {subject: None for subject in args.subjects.split(",")}
     meta_data = get_meta_data()
-    for subject in args.subjects.split(","):
-        """return a test data loader, and a k-fold cross validation generator"""
-        img_files = [f for f in get_files(subject) if f.endswith(".png")][: config['n_samples']]
-        images = jnp.array([preprocess(Image.open(f), config['image_size']) for f in tqdm(img_files)])
 
-        train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(images)), test_size=0.1, random_state=42))
+    for subject in tqdm(args.subjects.split(",")):
+        """return a test data loader, and a k-fold cross validation generator"""
+        img_files = [f for f in get_files(subject) if f.endswith(".png")]
+        img_files = img_files[:config['n_samples']] if config['n_samples'] else img_files
+        if args.alex:  # use pca alexnet img representation  (each image is 100d vector, instead of 224x224x3)
+            images = jnp.array(np.load(f"data/{subject}/training_split/alexnet_pca.npy"))
+        else:  # use raw images
+            images = jnp.array([preprocess(Image.open(f), config['image_size']) for f in tqdm(img_files)])
+
+        train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(img_files)), test_size=0.1, random_state=42))
         train_img_files = [img_files[idx] for idx in train_idxs.tolist()]
         folds = get_folds(images[train_idxs], args, meta_data, train_img_files, subject, k=config['k_folds'])
 
@@ -59,14 +64,14 @@ def get_folds(images, args, meta_data, img_files, subject, k=5):
 
 def get_subject_data(images, args, meta_data, img_files, subject):
     """return a data loader combining images and fmri data, and adding COCO stuff"""
-    lh_fmri, rh_fmri = get_fmri(subject)
-    lh = lh_fmri[:, get_multi_roi_mask(subject, args.rois, "left")]
-    rh = rh_fmri[:, get_multi_roi_mask(subject, args.rois, "right")]
+    lh, rh = get_fmri(subject)   # we are always outputting all voxels for now. Voxel count for subjexts are the same, but ROI sizes are different
+    # lh = lh[:, get_multi_roi_mask(subject, args.rois, "left")]
+    # rh = rh[:, get_multi_roi_mask(subject, args.rois, "right")]
 
     coco_ids = [int(f.split(".")[0].split("-")[-1]) for f in img_files]  # coco meta ids
     cats = meta_data.iloc[coco_ids]["categories"].values  # category info
     cats = jnp.array([c_to_one_hot(c) for c in cats])  # one-hot encoding
     perm = np.random.permutation(len(img_files))  # randomize order of images
-    return images[perm], cats[perm], lh[perm], rh[perm]  # supers[perm], captions[perm], fmri[perm]
+    return images[perm], cats[perm], lh[perm], rh[perm] # supers[perm], captions[perm], fmri[perm]
+    captions = meta_data.iloc[coco_ids]["captions"].values  # caption info
     # supers = meta_data.iloc[coco_ids]["supercategory"].values  # supercategory info
-    # captions = meta_data.iloc[coco_ids]["captions"].values  # caption info

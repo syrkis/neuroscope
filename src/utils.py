@@ -28,7 +28,7 @@ VAL_CAP_FILE = os.path.join(COCO_DIR, "captions_val2017.json")
 MAKE_CATS = False
 MAKE_COCO_METAS = False
 
-rois = [
+ROIS = [
     "V1v",
     "V1d",
     "V2v",
@@ -93,6 +93,9 @@ def get_files(subject, split="training"):
 
 
 def get_args_and_config(args_lst=None):
+    subjs = 'subj01,subj02,subj03,subj04,subj05,subj07'  # skip 6 and 8 because fmri dim differs
+    _rois = ",".join(ROIS)
+    _roius = "EBA"
     # Load the YAML configuration file
     with open('config/config.yaml', 'r') as f:
         config = yaml.safe_load(f)
@@ -101,27 +104,20 @@ def get_args_and_config(args_lst=None):
 
     # Create an argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument(f'--rois', type=str, default='RSC')
-    parser.add_argument(f'--subjects', type=str, default='subj05,subj01')
-    parser.add_argument(f'--n_samples', type=int, default=0)
-
-    def rois_to_fmri_size(rois, roi_config):
-        size = 0
-        for roi in rois:
-            size += roi_config['subj05']['left_hem'][roi]
-            size += roi_config['subj05']['right_hem'][roi]
-        return size
+    parser.add_argument(f'--rois', type=str, default=_rois)
+    parser.add_argument(f'--subjects', type=str, default=subjs)
+    parser.add_argument(f'--n_samples', type=int, default=None)
+    parser.add_argument(f'--alex', type=bool, default=False)
 
     # Parse the arguments and return them as a dictionary
     if 'ipykernel' in sys.modules:
-        args_dict = {'rois': 'RSC', 'subjects': 'subj05,subj01', 'n_samples': 1024}
+        args_dict = {'rois': _rois, 'subjects': subjs, 'n_samples': 0, 'alex': True}
         args_lst = [f'--{k}={v}' for k, v in args_dict.items()]
         args = parser.parse_args(args=args_lst)
     else:
         args = parser.parse_args()
 
-    config['n_samples'] = args.n_samples if args.n_samples else config['n_samples']
-    config['fmri_size'] = rois_to_fmri_size(args.rois.split(','), rois)
+    config['n_samples'] = args.n_samples
     config['rois'] = args.rois.replace(',', ', ')
     config['subjects'] = args.subjects
     return args, config

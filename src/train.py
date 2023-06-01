@@ -13,7 +13,7 @@ import wandb
 from typing import List, Tuple, Dict
 from functools import partial
 from tqdm import tqdm
-from src.model import init, train_loss_fn, train_forward
+from src.model import lh_init, rh_init, train_loss_fn
 from src.eval import evaluate
 
 
@@ -27,31 +27,44 @@ Batch = Fold
 
 
 # functions
-def train(folds: List[Fold], config: Dict) -> List[hk.Params]:
+def train(data, config):
+    """train function"""
+    config['group_name'] = wandb.util.generate_id()
+    for subject, (folds, _) in data.items():
+        lh_params_lst, rh_params_lst = train_subject(folds, config)
+        np.save(f'results/models/{subject}_lh.npy', lh_params_lst)
+        np.save(f'results/models/{subject}_rh.npy', rh_params_lst)
+
+
+def train_subject(folds: List[Fold], config: Dict) -> Tuple[List[hk.Params], List[hk.Params]]:
     """train function"""
     # TODO: parallelize using pmap or vmap
-    config['group_name'] = wandb.util.generate_id()
-    params_lst = [init(next(rng), img, cat) for img, cat, _ in folds]
+    lh_params_lst = [lh_init(next(rng), img, cat) for img, cat, _ in folds]
+    rh_params_lst = [rh_init(next(rng), img, cat) for img, cat, _ in folds]
     data = [make_fold(folds, fold) for fold in range(len(folds))]  # (train_data, val_data) list
     train_fold = partial(train_fold_fn, config=config)
-    for idx, (params, fold) in enumerate(zip(params_lst, data)):
-        params_lst[idx] = train_fold(params, fold)
-    return params_lst
+    for idx, (lh_params, rh_params, fold) in enumerate(zip(lh_params_lst, rh_params_lst, data)):
+        params = train_fold(lh_params, rh_params, fold)
+        lh_params_lst[idx] = params[0]
+        rh_params_lst[idx] = params[1]
+    return lh_params_lst, rh_params_lst
 
 
-def train_fold_fn(params, fold, config: Dict) -> hk.Params:
+def train_fold_fn(lh_params, rh_params, fold, config: Dict) -> hk.Params:
     """train_fold function"""
     train_data, val_data = fold
     wandb.init(project="neuroscope", entity='syrkis', config=config, group=config['group_name'])
-    opt_state = opt.init(params)
+    lh_opt_state = opt.init(lh_params)
+    rh_opt_state = opt.init(rh_params)
     for step in tqdm(range(config['n_steps'])):
-        batch = get_batch(train_data, config['batch_size'])
-        params, opt_state = update(params, batch, opt_state)
+        lh_batch, rh_batch = get_batch(train_data, config['batch_size'])
+        lh_params, lh_opt_state = update(lh_params, lh_batch, lh_opt_state)
+        rh_batch, rh_opt_state = update(rh_params, rh_batch, rh_opt_state)
         if step % (config['n_steps'] // 100) == 0:
-            metrics = evaluate(params, train_data, val_data, get_batch, config)
+            metrics = evaluate(lh_params, rh_params, train_data, val_data, get_batch, config)
             wandb.log(metrics, step=step)
     wandb.finish()
-    return params
+    return lh_params, rh_params
 
 
 def get_batch(fold: Fold, batch_size: int) -> Batch:

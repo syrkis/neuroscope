@@ -1,4 +1,6 @@
 image_size: 224
+lh_size: 19004
+rh_size: 20544
 learning_rate: 1e-3
 batch_size: 32
 n_steps: 1000

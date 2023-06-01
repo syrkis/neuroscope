@@ -5,11 +5,10 @@
 
 # imports
 import numpy as np
-from src.model import train_loss_fn, infer_loss_fn
 
 
 # evaluate
-def evaluate(params, train_data, val_data, get_batch, config, steps=2):
+def evaluate(params, train_data, val_data, get_batch, config, train_loss_fn, infer_loss_fn, steps=2):
     batch_size = config['batch_size']
     train_loss, val_loss = [], []
     for step in range(steps):
@@ -17,7 +16,10 @@ def evaluate(params, train_data, val_data, get_batch, config, steps=2):
         val_batch = get_batch(val_data, batch_size)
         train_loss.append(train_loss_fn(params, train_batch))
         val_loss.append(infer_loss_fn(params, val_batch))
-    return {'train_loss': np.mean(train_loss), 'val_loss': np.mean(val_loss)}
+    return {
+        'train_loss': np.mean(train_loss),
+        'val_loss': np.mean(val_loss)
+    }
 
 def save_if_best(params, best_loss, val_loss):
     if val_loss < best_loss:
