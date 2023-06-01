@@ -17,19 +17,36 @@ as the fMRI data is collected. We find that this improves the performance of the
 
 ## Introduction
 
-While the brain is a complex organ, it is possible to measure its activity.
-The goal of this project is to reconstruct images from brain activity.
-Specifically, the project will use fMRI data to reconstruct images.
-The project will use a deep neural network to reconstruct images,
-using differentiable programming and geometric deep learning.
+While the brain is a complex organ, perhaps most accurately conceptualized
+as a network of neurons, it is also a physical whose properties can be measured,
+on a more coarse level—in the case of this project, using fMRI.
+We use a subset of the Natural Scenes Dataset (NSD) @allen2022,
+provided by the Algonauts Project @gifford2023, to train a model
+that, given an image, can predict the fMRI response of a subject.
 
-Being able to decode images from brain activity has many applications.
-For example, it could be used to help people with locked-in syndrome
-communicate with the outside world. Pursuing this goal is also
-interesting from a scientific perspective, as it could help us
-understand how the brain processes visual information.
+Understanding how the brain encodes visual information is an important goal
+in neuroscience. The Algonauts Project is a competition that aims to develop
+a computational model of how the brain encodes visual information.
+This is foundational research with potential applications in both
+neuroscience and machine learning.
+
+The NSD consists of 73,000 images of natural scenes and various
+assoicated responses, collected over the course of one year from 8 subjects,
+making it the largest dataset of its kind, enabling the development of
+more accurate models, which are now released on an ongoing basis
+from various research groups.
+
+Our approach is to add a modality during training. Specifically,
+we add a vector of semantic features of the image for the given fMRI data.
+Thouch multimodality, is a common approach in machine learning,
+recent advances in deep learning has largely been enabled by
+enormous amounts of data. In this project, we explore the potential
+of multimodality in the context of the Algonauts Challenge,
+attempting a model that, during inference,
+has the same number of parameters as the unimodal baseline model.
 
 ## Literature Review
+
 
 Decoding images from brain activity is a well studied problem in the field of
 neuroscience. The first successful decoding of images from brain activity was

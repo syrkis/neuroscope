@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #SBATCH --partition brown,red
-#SBATCH --cpus-per-task=1
-#SBATCH --time 03:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --time 06:00:00
 #SBATCH --job-name jupyter-notebook
 #SBATCH --output logs/jupyter.log
-#SBATCH --gres=gpu:1              # :v100:1
-#SBATCH --mem=10G
+# #SBATCH --gres=gpu:1              # :v100:1
+#SBATCH --mem=60G
 #SBATCH --account=students
 # get tunneling info
 XDG_RUNTIME_DIR=""

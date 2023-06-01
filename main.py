@@ -7,15 +7,13 @@
 from src.utils import get_args_and_config
 from src.data import get_data
 from src.train import train
-from src.alex import run_alex
+from src.alex import run_subj
+from multiprocessing import Pool
 
 
 def main():
     """main function"""
-    run_alex()
-    # args, config = get_args_and_config()
-    # data = get_data(args, config)
-    # params_lst = train(folds, config)
+    args, config = get_args_and_config()
 
 
 # run main()
