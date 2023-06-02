@@ -93,7 +93,7 @@ def get_files(subject, split="training"):
 
 
 def get_args_and_config(args_lst=None):
-    subjs = 'subj01,subj02,subj03,subj04,subj05,subj07'  # skip 6 and 8 because fmri dim differs
+    subjs = 'subj01'  # ,subj02,subj03,subj04,subj05,subj07'  # skip 6 and 8 because fmri dim differs
     _rois = ",".join(ROIS)
     _roius = "EBA"
     # Load the YAML configuration file

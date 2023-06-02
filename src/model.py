@@ -6,86 +6,68 @@
 import jax
 from jax import numpy as jnp
 import haiku as hk
-from functools import partial
 from src.utils import config
 
 
 # constants
+IMG_N_LAYERS = config['n_layers']['img']
+IMG_N_UNITS = config['n_units']['img']
+FMRI_N_LAYERS = config['n_layers']['fmri']
+FMRI_N_UNITS = config['n_units']['fmri']
+CAT_N_LAYERS = config['n_layers']['cat']
+CAT_N_UNITS = config['n_units']['cat']
+LATENT_DIM = config['latent_dim']
+CAT_SIZE = config['cat_size']
+LH_SIZE = config['lh_size']
+RH_SIZE = config['rh_size']
+
+# rng
 rng = hk.PRNGSequence(jax.random.PRNGKey(42))
-dropout = lambda x: hk.dropout(rate=config['dropout'], rng=next(rng), x=x)
-# haiku identity function
-identity = lambda x: x
 
 
 # functions
-def network_fn(img, dropout, fmri_dim):
+def network_fn(img):
     """network function"""
     # TODO: add dropout if training
     img_mlp = hk.Sequential([
-        hk.Linear(100), jax.nn.gelu,
-        hk.Linear(200), jax.nn.gelu,
-        hk.Linear(400), jax.nn.gelu,
-        hk.Linear(800), jax.nn.gelu,
+        hk.nets.MLP([IMG_N_UNITS] * IMG_N_LAYERS),
+        hk.Linear(LATENT_DIM),
     ])
-    if dropout:
-        pass # TODO: add dropout
     cat_mlp = hk.Sequential([
-        hk.Linear(800), jax.nn.gelu,
-        hk.Linear(400), jax.nn.gelu,
-        hk.Linear(200), jax.nn.gelu,
-        hk.Linear(80), jax.nn.sigmoid,
+        hk.nets.MLP([CAT_N_UNITS] * CAT_N_LAYERS),
+        hk.Linear(CAT_SIZE),
+        jax.nn.sigmoid,
     ])
-    fmri_mlp = hk.Sequential([
-        hk.Linear(800), jax.nn.gelu,
-        hk.Linear(1600), jax.nn.gelu,
-        hk.Linear(fmri_dim),
+    lh_mlp = hk.Sequential([
+        hk.nets.MLP([FMRI_N_UNITS] * FMRI_N_LAYERS),
+        hk.Linear(LH_SIZE),
     ])
-    img = img_mlp(img)
-    cat = cat_mlp(img)
-    fmri = fmri_mlp(img)
-    return fmri, cat
+    rh_mlp = hk.Sequential([
+        hk.nets.MLP([FMRI_N_UNITS] * FMRI_N_LAYERS),
+        hk.Linear(RH_SIZE),
+    ])
+    z = img_mlp(img)  # get latent representation
+    cat = cat_mlp(z)  # get categorical prediction
+    lh = lh_mlp(z)    # get left hemisphere prediction
+    rh = rh_mlp(z)    # get right hemisphere prediction
+    return lh, rh, cat
 
 
-lh_train_forward = hk.without_apply_rng(hk.transform(partial(network_fn, dropout=True, fmri_dim=config['lh_size']))).apply
-lh_infer_forward = hk.without_apply_rng(hk.transform(partial(network_fn, dropout=False, fmri_dim=config['lh_size']))).apply
-lh_init = hk.transform(partial(network_fn, dropout=True, fmri_dim=config['lh_size'])).init
+init, forward = hk.without_apply_rng(hk.transform(network_fn))
 
-rh_train_forward = hk.without_apply_rng(hk.transform(partial(network_fn, dropout=True, fmri_dim=config['rh_size']))).apply
-rh_infer_forward = hk.without_apply_rng(hk.transform(partial(network_fn, dropout=False, fmri_dim=config['rh_size']))).apply
-rh_init = hk.transform(partial(network_fn, dropout=True, fmri_dim=config['rh_size'])).init
-
-def loss_fn(fmri_hat, cat_hat, fmri, cat):
+def loss_fn(params, batch):
     """loss function"""
-    fmri_loss = jnp.mean((fmri_hat - fmri) ** 2)
-    cat_loss = jnp.mean((cat_hat - cat) ** 2)
-    loss = config['alpha'] * fmri_loss + (1 - config['alpha']) * cat_loss
-    return loss
+    img, lh, rh, cat = batch
+    lh_hat, rh_hat, cat_hat = forward(params, img)
+    lh_loss = mse(lh_hat, lh)
+    rh_loss = mse(rh_hat, rh)
+    cat_loss = bce(cat_hat, cat)
+    return lh_loss + rh_loss + cat_loss  # TODO: add weights to losses
 
-def fmri_loss_fn(pred, fmri):
+def mse(pred, target):
     """loss function"""
-    return jnp.mean((pred - fmri) ** 2)
+    return jnp.mean((pred - target) ** 2)
 
-def cat_loss_fn(pred, cat):
+def bce(pred, target):
     """loss function"""
-    return jnp.mean((pred - cat) ** 2)
-
-def train_loss_fn(params, batch, hem):
-    """loss function"""
-    img, cat, fmri = batch
-    forward_fn = lh_train_forward if hem == 'lh' else rh_train_forward
-    fmri_hat, cat_hat = forward_fn(params, img, cat)
-    return fmri_loss_fn(fmri_hat, fmri) + cat_loss_fn(cat_hat, cat)
-
-def infer_loss_fn(params, batch, hem):
-    """loss function"""
-    img, cat, fmri = batch
-    forward_fn = lh_infer_forward if hem == 'lh' else rh_infer_forward
-    fmri_hat, cat_hat = forward_fn(params, img, cat)
-    return fmri_loss_fn(fmri_hat, fmri) + cat_loss_fn(cat_hat, cat)
-
-lh_train_loss_fn = partial(train_loss_fn, hem='lh')
-lh_infer_loss_fn = partial(infer_loss_fn, hem='lh')
-rh_train_loss_fn = partial(train_loss_fn, hem='rh')
-rh_infer_loss_fn = partial(infer_loss_fn, hem='rh')
-loss_fns = {'lh': (lh_train_loss_fn, lh_infer_loss_fn),
-            'rh': (rh_train_loss_fn, rh_infer_loss_fn)}
+    return jnp.mean(jnp.where(target == 1, -jnp.log(pred), -jnp.log(1 - pred)))

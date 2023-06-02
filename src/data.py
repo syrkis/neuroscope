@@ -62,7 +62,7 @@ def get_folds(images, args, meta_data, img_files, subject, k=5):
     return folds
 
 
-def get_subject_data(images, args, meta_data, img_files, subject):
+def get_subject_data(imgs, args, meta_data, img_files, subject):
     """return a data loader combining images and fmri data, and adding COCO stuff"""
     lh, rh = get_fmri(subject)   # we are always outputting all voxels for now. Voxel count for subjexts are the same, but ROI sizes are different
     # lh = lh[:, get_multi_roi_mask(subject, args.rois, "left")]
@@ -72,6 +72,6 @@ def get_subject_data(images, args, meta_data, img_files, subject):
     cats = meta_data.iloc[coco_ids]["categories"].values  # category info
     cats = jnp.array([c_to_one_hot(c) for c in cats])  # one-hot encoding
     perm = np.random.permutation(len(img_files))  # randomize order of images
-    return images[perm], cats[perm], lh[perm], rh[perm] # supers[perm], captions[perm], fmri[perm]
-    captions = meta_data.iloc[coco_ids]["captions"].values  # caption info
+    return imgs[perm], lh[perm], rh[perm], cats[perm] # supers[perm], captions[perm], fmri[perm]
+    # captions = meta_data.iloc[coco_ids]["captions"].values  # caption info
     # supers = meta_data.iloc[coco_ids]["supercategory"].values  # supercategory info

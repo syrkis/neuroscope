@@ -1,10 +1,17 @@
-image_size: 224
+alex_size: 100
 lh_size: 19004
 rh_size: 20544
+cat_size: 80
 learning_rate: 1e-3
 batch_size: 32
 n_steps: 1000
 k_folds: 5
-n_samples: 1024
-dropout: 0.2
-hidden_size: 128
+latent_dim: 200
+n_layers:
+  img: 1
+  fmri: 1
+  cat: 1
+n_units:
+  img: 600
+  fmri: 600
+  cat: 600
