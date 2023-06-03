@@ -2,7 +2,7 @@ from src.utils import get_args_and_config, get_files, plot_metrics
 from src.data import get_data
 from src.train import train
 from src.model import network_fn
-from src.plots import plot_graph
+from src.fmri import plot_brain
 
 
 __all__ = [

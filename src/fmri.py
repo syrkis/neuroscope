@@ -8,7 +8,6 @@ import os
 import numpy as np
 from nilearn import datasets
 from nilearn import plotting
-import networkx as nx
 from tqdm import tqdm
 from src.utils import DATA_DIR, SUBJECTS
 

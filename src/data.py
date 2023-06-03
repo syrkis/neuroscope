@@ -30,10 +30,10 @@ def get_data(args, config):
 
         train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(img_files)), test_size=0.1, random_state=42))
         train_img_files = [img_files[idx] for idx in train_idxs.tolist()]
-        folds = get_folds(images[train_idxs], args, meta_data, train_img_files, subject, k=config['k_folds'])
+        folds = get_folds(images[train_idxs], args, meta_data, train_img_files, subject, train_idxs, k=config['k_folds'])
 
         test_img_files = [img_files[idx] for idx in test_idxs.tolist()]
-        test_data = get_subject_data(images[test_idxs], args, meta_data, test_img_files, subject)
+        test_data = get_subject_data(images[test_idxs], args, meta_data, test_img_files, subject, test_idxs)
 
         data[subject] = (folds, test_data)
     return data
@@ -49,7 +49,7 @@ def get_mixed_subject_data(args, config):
 
 
 # cross validation
-def get_folds(images, args, meta_data, img_files, subject, k=5):
+def get_folds(images, args, meta_data, img_files, subject, idxs, k=5):
     """return a k-fold cross validation generator"""
     folds = []
     # ensure that each fold has the same number of samples
@@ -57,14 +57,15 @@ def get_folds(images, args, meta_data, img_files, subject, k=5):
     fold_idxs = np.array_split(np.random.permutation(n_samples), k)
     for i in range(k):
         fold_img_files = [img_files[idx] for idx in fold_idxs[i]]
-        fold = get_subject_data(images[fold_idxs[i]], args, meta_data, fold_img_files, subject)
+        fold = get_subject_data(images[fold_idxs[i]], args, meta_data, fold_img_files, subject, idxs[fold_idxs[i]])
         folds.append(fold)
     return folds
 
 
-def get_subject_data(imgs, args, meta_data, img_files, subject):
+def get_subject_data(imgs, args, meta_data, img_files, subject, idxs):
     """return a data loader combining images and fmri data, and adding COCO stuff"""
     lh, rh = fmri_data[subject].values()   # we are always outputting all voxels for now. Voxel count for subjexts are the same, but ROI sizes are different
+    lh, rh = lh[idxs], rh[idxs]
     # lh = lh[:, get_multi_roi_mask(subject, args.rois, "left")]
     # rh = rh[:, get_multi_roi_mask(subject, args.rois, "right")]
 
