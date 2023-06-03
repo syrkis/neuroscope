@@ -14,12 +14,14 @@ from typing import List, Tuple, Dict
 from functools import partial
 from tqdm import tqdm
 from src.model import init, loss_fn
-from src.eval import evaluate
+from src.eval import evaluate, save_best_model
 
 
 # constants
 opt = optax.adam(1e-3)
 rng = hk.PRNGSequence(jax.random.PRNGKey(42))
+
+# globals
 
 # types
 Fold = Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]
@@ -33,13 +35,13 @@ def train(data, config):
     for subject, (folds, _) in data.items():
         config['subject'] = subject
         params_lst = train_subject(folds, config)
+    return params_lst
 
 
 def train_subject(folds: List[Fold], config: Dict) -> Tuple[List[hk.Params], List[hk.Params]]:
     """train function"""
     # TODO: parallelize using pmap or vmap
     params_lst = [init(next(rng), img[:1]) for img, _, _, _ in folds]
-    config['n_params'] = sum([p.size for p in jax.tree_util.tree_leaves(params_lst[0])])
     data = [make_fold(folds, fold) for fold in range(len(folds))]  # (train_data, val_data) list
     train_fold = partial(train_fold_fn, config=config)
     for idx, (params, fold) in enumerate(zip(params_lst, data)):
@@ -50,6 +52,10 @@ def train_subject(folds: List[Fold], config: Dict) -> Tuple[List[hk.Params], Lis
 def train_fold_fn(params, fold, config: Dict) -> hk.Params:
     """train_fold function"""
     train_data, val_data = fold
+    best_lh_val_loss = np.inf
+    best_rh_val_loss = np.inf
+    config['n_params'] = sum([p.size for p in jax.tree_util.tree_leaves(params)])
+    config['epochs'] = config['n_steps'] // (len(train_data[0]) // config['batch_size'])
     wandb.init(project="neuroscope", entity='syrkis', config=config, group=config['group_name'])
     opt_state = opt.init(params)
     for step in tqdm(range(config['n_steps'])):
@@ -57,6 +63,8 @@ def train_fold_fn(params, fold, config: Dict) -> hk.Params:
         params, opt_state = update(params, batch, opt_state)
         if step % (config['n_steps'] // 100) == 0:
             metrics = evaluate(params, train_data, val_data, get_batch, config)
+            best_lh_val_loss = save_best_model(params, metrics['val_lh_loss'], best_lh_val_loss, config['subject'], 'lh')
+            best_rh_val_loss = save_best_model(params, metrics['val_rh_loss'], best_rh_val_loss, config['subject'], 'rh')
             wandb.log(metrics, step=step)
     wandb.finish()
     return params

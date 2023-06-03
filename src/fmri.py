@@ -7,181 +7,102 @@
 import os
 import numpy as np
 from nilearn import datasets
-from nilearn.connectome import ConnectivityMeasure
+from nilearn import plotting
 import networkx as nx
+from tqdm import tqdm
+from src.utils import DATA_DIR, SUBJECTS
 
-
-# constants
+# globals
 atlas = datasets.fetch_surf_fsaverage("fsaverage")
-DATA_DIR = "data/"
+
+roi_class_to_roi = {"prf-visualrois": ["V1v", "V1d", "V2v", "V2d", "V3v", "V3d", "hV4"],
+                    "floc-bodies": ["EBA", "FBA-1", "FBA-2", "mTL-bodies"],
+                    "floc-faces": ["OFA", "FFA-1", "FFA-2", "mTL-faces", "aTL-faces"],
+                    "floc-places": ["OPA", "PPA", "RSC"],
+                    "floc-words": ["OWFA", "VWFA-1", "VWFA-2", "mfs-words", "mTL-words"],
+                    "streams": ["early", "midventral", "midlateral", "midparietal", "ventral", "lateral", "parietal"]}
+
+roi_to_roi_class = {roi: roi_class for roi_class, rois in roi_class_to_roi.items() for roi in rois}
 
 
-# load fmri data
-def get_fmri(subject: str) -> tuple:
-    """return the fmri data for the given subject"""
-    lh = np.load(fmri_data(subject, "l"))
-    rh = np.load(fmri_data(subject, "r"))
-    return lh, rh
+#  load roi data
+def load_roi_data(subject):
+    """load the files for the given subject"""
+    roi_dir = os.path.join(DATA_DIR, subject, "roi_masks")
 
-# connectome construction
-def get_connectome(subject: str, roi: str, hem: str) -> np.ndarray:
-    """given a roi, return the connectome for that roi in the given hemisphere"""
-    lh, rh = get_fmri(subject)
-    roi_mask = get_roi_mask(roi, hem, atlas)
-    return lh[:, roi_mask] if hem == "left" else rh[:, roi_mask]
+    data = {'mapping' : {},
+            'challenge' : {'lh' : {}, 'rh' : {}},
+            'fsaverage' : {'lh' : {}, 'rh' : {}}}
 
+    for roi_class in roi_class_to_roi.keys():
+        data['mapping'][roi_class] = {'id_to_roi' : {}, 'roi_to_id' : {}}
+        data['mapping'][roi_class]['id_to_roi'] = np.load(os.path.join(roi_dir, f'mapping_{roi_class}.npy'), allow_pickle=True).item()
+        data['mapping'][roi_class]['roi_to_id'] = {v: k for k, v in data['mapping'][roi_class]['id_to_roi'].items()}
+    
+    for hem in ['lh', 'rh']:
+        data['fsaverage'][hem]['all-vertices'] = np.load(os.path.join(roi_dir, f'{hem}.all-vertices_fsaverage_space.npy'))
+        for roi_class in roi_class_to_roi.keys():
+            data['challenge'][hem][roi_class] = np.load(os.path.join(roi_dir, f'{hem}.{roi_class}_challenge_space.npy'))
+            data['fsaverage'][hem][roi_class] = np.load(os.path.join(roi_dir, f'{hem}.{roi_class}_fsaverage_space.npy'))
 
-def fmri_data(subject: str, hem: str) -> str:
-    """given a hemisphere, return the fmri data directory"""
-    return os.path.join(
-        DATA_DIR, subject, "training_split",
-        "training_fmri", hem + "h_training_fmri.npy"
-                        )
+    return data
 
-def get_roi_dir(subject):
-    return os.path.join(DATA_DIR, subject, "roi_masks")
-
-def get_mapping_files(subject):
-    roi_dir = get_roi_dir(subject)
-    return [
-        os.path.join(roi_dir, f)
-        for f in sorted(os.listdir(roi_dir))
-        if f.startswith("mapping_")
-    ]
-
-def get_challenge_files(subject):
-    roi_dir = get_roi_dir(subject)
-    return [
-        os.path.join(roi_dir, f)
-        for f in sorted(os.listdir(roi_dir))
-        if f.endswith("challenge_space.npy")
-    ]
-
-def get_fsaverage_files(subject):
-    roi_dir = get_roi_dir(subject)
-    return [
-        os.path.join(roi_dir, f)
-        for f in sorted(os.listdir(roi_dir))
-        if f.endswith("fsaverage_space.npy")
-    ]
-
-def get_mappings(subject):
-    mapping_files = get_mapping_files(subject)
-    return {
-        f.split("/")[-1].split("_")[1].split(".")[0]: np.load(f, allow_pickle=True).item()
-        for f in mapping_files
-    }
-
-def get_challenge(subject):
-    challenge_files = get_challenge_files(subject)
-    return {
-        f.split("/")[-1].split("_")[0]: np.load(f) for f in challenge_files
-    }
-
-def get_fsaverage(subject):
-    fsaverage_files = get_fsaverage_files(subject)
-    return {
-        f.split("/")[-1].split("_")[0]: np.load(f) for f in fsaverage_files
-    }
+def load_fmri(subject):
+    """load the fmri data for the given subject"""
+    lh_fmri_file = os.path.join(DATA_DIR, subject, "training_split", "training_fmri", "lh_training_fmri.npy")
+    rh_fmri_file = os.path.join(DATA_DIR, subject, "training_split", "training_fmri", "rh_training_fmri.npy")
+    lh = np.load(lh_fmri_file)
+    rh = np.load(rh_fmri_file)
+    data = {'lh' : lh, 'rh' : rh}
+    return data
 
 
-
-def roi_to_roi_class(subject, roi):
-    """given a roi, return the roi class it belongs to"""
-    mappings = get_mappings(subject)
-    for k, v in mappings.items():
-        if roi in v.values():
-            return k
-    return None
+roi_data = {subject : load_roi_data(subject) for subject in tqdm(SUBJECTS)}
+fmri_data = {subject : load_fmri(subject) for subject in tqdm(SUBJECTS)}
 
 
-def roi_to_map_index(subject, roi):
-    """given a roi, return the index of the roi mapping within the roi class"""
-    mappings = get_mappings(subject) 
-    roi_class = roi_to_roi_class(subject, roi)
-    roi_map = mappings[roi_class]
-    return {v: k for k, v in roi_map.items()}[
-        roi
-    ]  # confusing that idx is used in mulitple classes
+# vector toi roi (image or correlation)
+def spaces(subject: str, hem: str, roi: str) -> np.ndarray:
+    """return the fsaverage space mapping for the given subject and hemisphere"""
+    if not roi:
+        fsaverage_space = roi_data[subject]['fsaverage'][hem]['all-vertices']
+        return fsaverage_space
+    else:
+        fsaverage_space = roi_data[subject]['fsaverage'][hem][roi_to_roi_class[roi]]
+        challenge_space = roi_data[subject]['challenge'][hem][roi_to_roi_class[roi]]
+        roi_id = roi_data[subject]['mapping'][roi_to_roi_class[roi]]['roi_to_id'][roi]
+        fsaverage_space = np.asarray(fsaverage_space == roi_id, dtype=int)
+        challenge_space = np.asarray(challenge_space == roi_id, dtype=int)
+        return fsaverage_space, challenge_space
 
 
-def get_roi_mask(subject, roi, hem, atlas="challenge"):
-    """given a roi, return the roi mask for the given hemisphere"""
-    challenge = get_challenge(subject)
-    fsaverage = get_fsaverage(subject)
-    roi_class = roi_to_roi_class(subject, roi)
-    roi_mapping = roi_to_map_index(subject, roi)
-    atlas = challenge if atlas == "challenge" else fsaverage
-    return atlas[f"{hem[0]}h.{roi_class}"] == roi_mapping
+def fsaverage_vec(challenge_vec, subject, roi):
+    """convert a challenge vector to fsaverage space"""
+    hem = "lh" if challenge_vec.shape[0] == 19004 else "rh"  # r might have wrong dimensions
+    if roi:
+        fsaverage_space, challenge_space = spaces(subject, hem, roi)
+        fsaverage_response = np.zeros(len(fsaverage_space))
+        fsaverage_response[np.where(fsaverage_space)[0]] = \
+        challenge_vec[np.where(challenge_space)[0]]
+    else:
+        fsaverage_space = spaces(subject, hem, roi)
+        fsaverage_response = np.zeros(len(fsaverage_space))
+        fsaverage_response[np.where(fsaverage_space)[0]] = challenge_vec
+    return fsaverage_response
 
 
-def get_multi_roi_mask(subject, rois, hem, atlas="challenge"):
-    """given a roi, return the roi mask for the given hemisphere"""
-    challenge = get_challenge(subject)
-    roi_mask = np.zeros(len(challenge[hem[0] + "h.floc-bodies"])).astype(bool)
-    for roi in rois.split(","):
-        roi_mask += get_roi_mask(subject, roi, hem, atlas)
-    return roi_mask
-
-
-def roi_response_to_image(subject, roi, idxs, hem):  # TODO: ensure correctness
-    """given a roi, return the response to image for that roi in the given hemisphere"""
-    lh_fmri, rh_fmri = get_fmri(subject)
-    roi_mask = get_roi_mask(subject, roi, hem, atlas="challenge")
-    if hem == "left":
-        res = lh_fmri[:, roi_mask][idxs]
-    if hem == "right":
-        res = rh_fmri[:, roi_mask][idxs]
-    return res
-
-
-def fsaverage_roi(subject, roi, hem):  # TODO: ensure correctness
-    """given a roi, return the roi mask for the given hemisphere"""
-    fsaverage = get_fsaverage(subject)
-    roi_class = roi_to_roi_class(subject, roi)
-    fsaverage_roi_mask = fsaverage[f"{hem[0]}h.{roi_class}"] == roi_to_map_index(roi)
-    return fsaverage_roi_mask.astype(int)
-
-
-def fsaverage_roi_response_to_image(subject, roi, img, hem):  # TODO: ensure correctness
-    """given a roi, return the response to image for that roi in the given hemisphere"""
-    lh_fmri, rh_fmri = get_fmri(subject)
-    fsaverage_roi_mask = get_roi_mask(subject, roi, hem, atlas="fsaverage")
-    challenge_roi_mask = get_roi_mask(subject, roi, hem, atlas="challenge")
-    res = np.zeros(len(fsaverage_roi_mask))
-    if hem == "left":
-        res[np.where(fsaverage_roi_mask)[0]] = lh_fmri[
-            img, np.where(challenge_roi_mask)[0]
-        ]
-    if hem == "right":
-        res[np.where(fsaverage_roi_mask)[0]] = rh_fmri[
-            img, np.where(challenge_roi_mask)[0]
-        ]
-    return res
-
-
-def connectome_from_roi_response(subject, roi, hem):  # this is wrong
-    """given a roi, return the connectome for that roi in the given hemisphere"""
-    lh_fmri, rh_fmri = get_fmri(subject)
-    roi_mask = get_roi_mask(subject, roi, hem, atlas="challenge")
-    fmri = lh_fmri if hem == "left" else rh_fmri
-    roi_response = fmri[:, roi_mask]
-    connectivity_measure = ConnectivityMeasure(kind="covariance")
-    connectivity_matrix = connectivity_measure.fit_transform([roi_response])[0]
-    connectome = connectivity_matrix_to_connectome(connectivity_matrix)
-    return connectome
-
-
-def connectivity_matrix_to_connectome(connectivity_matrix):
-    """given a connectivity matrix, return a graph"""
-    N = connectivity_matrix.shape[0]
-    thresh = np.percentile(
-        np.abs(connectivity_matrix), 100 * (N - (N / 100)) / N
-    )  # consider thresholding differently as n edges increases with nodes ** 2
-    connectivity_matrix[np.abs(connectivity_matrix) < thresh] = 0
-    # set diagonal to 0
-    np.fill_diagonal(connectivity_matrix, 0)
-    graph = nx.from_numpy_array(connectivity_matrix)
-    return graph, connectivity_matrix
-
-# TODO: add a function to get the connectome for a given roi for a particular image
+def plot_brain(challenge_vec, subject, hem, roi=None):
+    """plot a vector on the brain"""
+    surface = fsaverage_vec(challenge_vec, subject, roi)
+    direction = "left" if hem == "lh" else "right"
+    view = plotting.view_surf(
+        surf_mesh=atlas["pial_" + direction],
+        surf_map=surface,
+        bg_map=atlas["sulc_" + direction],
+        threshold=1e-14,
+        cmap="twilight_shifted",
+        colorbar=True,
+        title=hem + " hemisphere " + subject,
+        black_bg=True,
+    )
+    return view.resize(height=600, width=600)

@@ -9,7 +9,7 @@ from PIL import Image
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from src.utils import get_files
-from src.fmri import get_multi_roi_mask, get_fmri  # NOTE: This is the only import from fmri.py
+from src.fmri import fmri_data  # NOTE: This is the only import from fmri.py
 from src.coco import preprocess, get_meta_data, c_to_one_hot
 
 
@@ -64,7 +64,7 @@ def get_folds(images, args, meta_data, img_files, subject, k=5):
 
 def get_subject_data(imgs, args, meta_data, img_files, subject):
     """return a data loader combining images and fmri data, and adding COCO stuff"""
-    lh, rh = get_fmri(subject)   # we are always outputting all voxels for now. Voxel count for subjexts are the same, but ROI sizes are different
+    lh, rh = fmri_data[subject].values()   # we are always outputting all voxels for now. Voxel count for subjexts are the same, but ROI sizes are different
     # lh = lh[:, get_multi_roi_mask(subject, args.rois, "left")]
     # rh = rh[:, get_multi_roi_mask(subject, args.rois, "right")]
 

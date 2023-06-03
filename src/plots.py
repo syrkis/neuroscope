@@ -13,10 +13,7 @@ import jraph
 from nilearn import plotting
 from tqdm import tqdm
 from src.fmri import (
-    fsaverage_roi,
-    fsaverage_roi_response_to_image,
     atlas,
-    connectome_from_roi_response,
 )
 
 
@@ -141,6 +138,19 @@ def plot_region(roi, hem, img=None):
         cmap="twilight_r",
         colorbar=True,
         title=roi + ", " + hem + " hemisphere",
+    )
+    return view.resize(height=900, width=1400)
+
+def plot_corr(corr, hem, subject):
+    surface = vec_to_surf(corr, hem, subject)
+    view = plotting.view_surf(
+        surf_mesh=atlas["pial_" + hem],
+        surf_map=surface,
+        bg_map=atlas["sulc_" + hem],
+        threshold=1e-14,
+        cmap="twilight_r",
+        colorbar=True,
+        title=hem + " hemisphere " + subject,
     )
     return view.resize(height=900, width=1400)
 
