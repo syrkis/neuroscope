@@ -106,4 +106,4 @@ def plot_brain(challenge_vec, subject, hem, roi=None):
         title=title,
         black_bg=True,
     )
-    return view.resize(height=600, width=600)
+    return view.resize(height=800, width=1200)

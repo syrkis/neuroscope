@@ -61,7 +61,7 @@ def train_fold_fn(params, fold, config: Dict) -> hk.Params:
     for step in tqdm(range(config['n_steps'])):
         batch = get_batch(train_data, config['batch_size'])
         params, opt_state = update(params, batch, opt_state)
-        if step % (config['n_steps'] // 100) == 0:
+        if step % (config['n_steps'] // 50) == 0:
             metrics = evaluate(params, train_data, val_data, get_batch, config)
             best_lh_val_loss = save_best_model(params, metrics['val_lh_loss'], best_lh_val_loss, config['subject'], 'lh')
             best_rh_val_loss = save_best_model(params, metrics['val_rh_loss'], best_rh_val_loss, config['subject'], 'rh')
