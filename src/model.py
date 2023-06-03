@@ -28,7 +28,7 @@ rng = hk.PRNGSequence(jax.random.PRNGKey(42))
 
 
 # functions
-def network_fn(img):  # img is 100 d alex net pca stuff from feature.2
+def network_fn(img):  # img is 100 d alex net pca stuff from feature 
     """network function"""
     # TODO: add dropout if training
     img_mlp = hk.Sequential([

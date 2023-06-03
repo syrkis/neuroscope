@@ -95,6 +95,8 @@ def plot_brain(challenge_vec, subject, hem, roi=None):
     """plot a vector on the brain"""
     surface = fsaverage_vec(challenge_vec, subject, roi)
     direction = "left" if hem == "lh" else "right"
+    title = direction + " hemisphere, " + "subject " + subject[-1]
+    title = title + ", " + roi if roi else title
     view = plotting.view_surf(
         surf_mesh=atlas["pial_" + direction],
         surf_map=surface,
@@ -102,7 +104,7 @@ def plot_brain(challenge_vec, subject, hem, roi=None):
         threshold=1e-14,
         cmap="twilight_shifted",
         colorbar=True,
-        title=hem + " hemisphere " + subject,
+        title=title,
         black_bg=True,
     )
     return view.resize(height=600, width=600)

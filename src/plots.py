@@ -141,19 +141,6 @@ def plot_region(roi, hem, img=None):
     )
     return view.resize(height=900, width=1400)
 
-def plot_corr(corr, hem, subject):
-    surface = vec_to_surf(corr, hem, subject)
-    view = plotting.view_surf(
-        surf_mesh=atlas["pial_" + hem],
-        surf_map=surface,
-        bg_map=atlas["sulc_" + hem],
-        threshold=1e-14,
-        cmap="twilight_r",
-        colorbar=True,
-        title=hem + " hemisphere " + subject,
-    )
-    return view.resize(height=900, width=1400)
-
 
 def small_multiples_connectome(rois):
     """plot a connectome for each roi in the given list"""
