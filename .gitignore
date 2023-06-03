@@ -1,6 +1,7 @@
 data/
 logs/
 wandb/
+models/
 .ipynb_checkpoints/
 **/__pycache__
 outputs/

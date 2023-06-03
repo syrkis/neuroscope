@@ -7,6 +7,7 @@ import jax
 from jax import grad, jit
 import jax.numpy as jnp
 import numpy as np
+import yaml
 import haiku as hk
 import optax
 import wandb
@@ -21,6 +22,9 @@ from src.utils import config
 # constants
 opt = optax.adam(config['lr'])
 rng = hk.PRNGSequence(jax.random.PRNGKey(42))
+
+# globals
+N_EVALS = 100
 
 # types
 Fold = Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]
@@ -56,11 +60,12 @@ def train_fold_fn(params, fold, config: Dict) -> hk.Params:
     config['n_params'] = sum([p.size for p in jax.tree_util.tree_leaves(params)])
     config['epochs'] = config['n_steps'] // (len(train_data[0]) // config['batch_size'])
     wandb.init(project="neuroscope", entity='syrkis', config=config, group=config['group_name'])
+    # log horizontal algonauts baseline line
     opt_state = opt.init(params)
     for step in tqdm(range(config['n_steps'])):
         batch = get_batch(train_data, config['batch_size'])
         params, opt_state = update(params, batch, opt_state)
-        if step % (config['n_steps'] // 100) == 0:
+        if step % (config['n_steps'] // N_EVALS) == 0:
             metrics = evaluate(params, train_data, val_data, get_batch, config)
             best_lh_val_loss = save_best_model(params, metrics['val_lh_loss'], best_lh_val_loss, config['subject'], 'lh')
             best_rh_val_loss = save_best_model(params, metrics['val_rh_loss'], best_rh_val_loss, config['subject'], 'rh')

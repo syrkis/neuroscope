@@ -1,0 +1,17 @@
+method: bayes
+metric:
+  name: val_rh_corr
+  goal: maximize
+parameters:
+  learning_rate:
+    distribution: uniform
+    min: 0.0001
+    max: 0.1
+  batch_size:
+    values: [32, 64, 128]
+  num_layers:
+    values: [1, 2, 3]
+  num_units:
+    values: [32, 64, 128]
+  dropout:
+    values: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
