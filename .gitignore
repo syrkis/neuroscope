@@ -2,6 +2,7 @@ data/
 logs/
 wandb/
 models/
+plots/
 .ipynb_checkpoints/
 **/__pycache__
 outputs/
