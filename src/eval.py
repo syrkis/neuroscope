@@ -14,8 +14,6 @@ from sklearn.linear_model import LinearRegression
 from src.model import loss_fn, mse, bce, forward, soft_f1, focal_loss
 from src.utils import SUBJECTS
 
-with open('config/algonauts_baseline.yaml') as f:
-    algonauts_baseline = yaml.load(f, Loader=yaml.FullLoader)
 
 def pearsonr(x, y):
     corr = jnp.corrcoef(x, y)
@@ -28,9 +26,9 @@ def corr(pred, target):
 
 
 # evaluate during training
-def evaluate(params, train_data, val_data, get_batch, config, steps=4):
+def evaluate(params, rng, train_data, val_data, get_batch, sweep_config, steps=10):
     """evaluate function"""
-    batch_size = config['batch_size']
+    batch_size = sweep_config['batch_size']
     train_losses, train_lh_losses, train_rh_losses, train_cat_losses = [], [], [], []
     train_lh_corrs, train_rh_corrs = [], []
     val_losses, val_lh_losses, val_rh_losses, val_cat_losses = [], [], [], []
@@ -39,8 +37,8 @@ def evaluate(params, train_data, val_data, get_batch, config, steps=4):
     # alg_val_lh_corrs, alg_val_rh_corrs = [], []
     for _ in range(steps):
         train_batch = get_batch(train_data, batch_size)
-        train_pred = forward(params, train_batch[0])
-        train_loss = loss_fn(params, train_batch)
+        train_pred = forward.apply(params, rng, train_batch[0])
+        train_loss = loss_fn(params, rng, train_batch)
 
         train_lh_loss = mse(train_pred[0], train_batch[1])
         train_rh_loss = mse(train_pred[1], train_batch[2])
@@ -63,8 +61,8 @@ def evaluate(params, train_data, val_data, get_batch, config, steps=4):
         #alg_train_rh_corrs.append(jnp.median(algonauts_train_rh_corr))
 
         val_batch = get_batch(val_data, batch_size)
-        val_pred = forward(params, val_batch[0])
-        val_loss = loss_fn(params, val_batch)
+        val_pred = forward.apply(params, rng, val_batch[0], training=False)
+        val_loss = loss_fn(params, rng, val_batch)  # this uses dropout but should not
 
         val_lh_loss = mse(val_pred[0], val_batch[1])
         val_rh_loss = mse(val_pred[1], val_batch[2])

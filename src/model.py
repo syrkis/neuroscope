@@ -6,6 +6,7 @@
 import jax
 from jax import numpy as jnp
 import haiku as hk
+from functools import partial
 from src.utils import config
 
 
@@ -22,14 +23,10 @@ LH_SIZE = config['lh_size']
 RH_SIZE = config['rh_size']
 ALPHA = config['alpha']
 BETA = config['beta']
-L2_REG = config['l2_reg']
-
-# rng
-rng = hk.PRNGSequence(jax.random.PRNGKey(42))
 
 
 # functions
-def network_fn(img):  # img is 100 d alex net pca stuff from feature 
+def network_fn(img, training=True):
     """network function"""
     # TODO: add dropout if training
     img_mlp = hk.Sequential([
@@ -49,26 +46,28 @@ def network_fn(img):  # img is 100 d alex net pca stuff from feature
         hk.nets.MLP([FMRI_N_UNITS] * FMRI_N_LAYERS, activation=jnp.tanh),
         hk.Linear(RH_SIZE),
     ])
+    img = hk.dropout(hk.next_rng_key(), config['dropout'], img) if training else img
     z = img_mlp(img)  # get latent representation
+    z = hk.dropout(hk.next_rng_key(), config['dropout'], z) if training else z
     cat = cat_mlp(z)  # get categorical prediction
     lh = lh_mlp(z)    # get left hemisphere prediction
     rh = rh_mlp(z)    # get right hemisphere prediction
     return lh, rh, cat
 
 
-init, forward = hk.without_apply_rng(hk.transform(network_fn))
+# use rng
+forward = hk.transform(network_fn)
 
-def loss_fn(params, batch):
+def loss_fn(params, rng, batch):
     """loss function"""
     img, lh, rh, cat = batch
-    lh_hat, rh_hat, cat_hat = forward(params, img)
+    lh_hat, rh_hat, cat_hat = forward.apply(params, rng, img)
     lh_loss = mse(lh_hat, lh)
     rh_loss = mse(rh_hat, rh)
     cat_loss = focal_loss(cat_hat, cat)
     fmri_loss = BETA * lh_loss + (1 - BETA) * rh_loss
     loss = ALPHA * fmri_loss + (1 - ALPHA) * cat_loss
-    regged_loss = loss + L2_REG * l2_reg(params)
-    return regged_loss
+    return loss
 
 def mse(pred, target):
     """loss function"""

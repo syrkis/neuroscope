@@ -1,7 +1,8 @@
-alpha: 1.0  # how much to weigh the fmri loss. 1.0 means cat loss is ignored
+alpha: 0.99  # how much to weigh the fmri loss. 1.0 means cat loss is ignored
 beta: 1.0   # how much to weigh the left hemisphere. 1.0 means right hemisphere is ignored
-l2_reg: 0.0001
+dropout: 0.4
 alex_size: 100
+weight_decay: 0.001
 lh_size: 19004
 rh_size: 20544
 cat_size: 80
@@ -12,8 +13,8 @@ k_folds: 5
 latent_dim: 100
 n_layers:
   img: 2
-  fmri: 1
-  cat: 1
+  fmri: 2
+  cat: 2
 n_units:
   img: 100
   fmri: 100

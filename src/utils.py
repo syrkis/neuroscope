@@ -118,10 +118,15 @@ def get_args_and_config(args_lst=None):
     else:
         args = parser.parse_args()
 
+    with open('config/sweep.yaml', 'r') as f:
+        sweep = yaml.safe_load(f)
+
+    config['sweep'] = sweep
     config['n_samples'] = args.n_samples
     config['rois'] = args.rois.replace(',', ', ')
     config['subjects'] = args.subjects
     return args, config
+
 
 args, config = get_args_and_config()
 
