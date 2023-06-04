@@ -1,12 +1,9 @@
 method: bayes
+name: sweep
 metric:
   name: val_rh_corr
   goal: maximize
 parameters:
-  learning_rate:
-    distribution: exponential
-    min: 0.0001
-    max: 0.1
   beta:
     distribution: uniform
     min: 0.0
@@ -16,15 +13,17 @@ parameters:
     min: 0.0
     max: 1.0
   batch_size:
-    values: [16, 32, 64, 128]
-  num_units:
-    values: [100, 200, 300, 400, 500]
+    value: 32
+  n_units:
+    value: 100
+  n_layers:
+    value: 2
   dropout:
-    values: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-  weight_decay:
-    values: [0.0, 0.0001, 0.001, 0.01, 0.1]
+    value: 0.4
   n_steps:
-    values: [1000, 2000, 3000, 4000, 5000, 6000]
+    value: 4000
   latent_dim:
-    values: [50, 100, 150, 200, 250]
+    value: 100
+  k_folds:
+    value: 5
 

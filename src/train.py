@@ -14,13 +14,12 @@ import wandb
 from typing import List, Tuple, Dict
 from functools import partial
 from tqdm import tqdm
-from src.model import forward, loss_fn
-from src.eval import evaluate, save_best_model, algonauts_baseline
-from src.utils import config
+from src.model import loss_fn_base, network_fn
+from src.eval import evaluate, algonauts_baseline
 
 
 # constants
-opt = optax.adamw(config['lr'], weight_decay=config['weight_decay'])
+opt = optax.adamw(0.001)  # perhaps hyper param search for lr and weight decay
 
 # globals
 N_EVALS = 100
@@ -33,47 +32,57 @@ Batch = Fold
 # functions
 def train(data, config):
     """train function"""
-    config['group_name'] = wandb.util.generate_id()
+    group = wandb.util.generate_id()
     for subject, (folds, _) in data.items():
         # do sweep here
-        config['subject'] = subject
-        sweep_id = wandb.sweep(config['sweep'], entity='syrkis', project='neuroscope', group=config['group_name'])
-        sweep_train = partial(train_subject, folds=folds, config=config)
-        params_lst = train_subject(folds, config)
-    return params_lst
+        #sweep_id = wandb.sweep(sweep=config, entity='syrkis', project='neuroscope')
+        #sweep_train = partial(train_subject, folds=folds, subject=subject, group=group, hem='lh')
+        #wandb.agent(sweep_id, sweep_train, count=10)
+        sweep_train = partial(train_subject, folds=folds, subject=subject, group=group, hem='rh')
+        sweep_train(config)
+        #wandb.agent(sweep_id, sweep_train, count=10)
 
 
-def train_subject(folds: List[Fold], config: Dict, sweep_config) -> Tuple[List[hk.Params], List[hk.Params]]:
+def train_subject(config, folds, subject, group, hem) -> Tuple[List[hk.Params], List[hk.Params]]:
     """train function"""
+    # config = wandb.config
     # TODO: parallelize using pmap or vmap
     rng = jax.random.PRNGKey(42)
+    forward = hk.transform(partial(network_fn, config=config))
+    loss_fn = partial(loss_fn_base, forward_fn=forward, config=config)
     params_lst = [forward.init(rng, img[:1]) for img, _, _, _ in folds]
     data = [make_fold(folds, fold) for fold in range(len(folds))]  # (train_data, val_data) list
-    train_fold = partial(train_fold_fn, config=config, sweep_config=sweep_config)
+    train_fold = partial(train_fold_fn, config=config, loss_fn=loss_fn, subject=subject, group=group)
+    lh_val_corrs, rh_val_corrs = [], []
     for idx, (params, fold) in enumerate(zip(params_lst, data)):
-        params_lst[idx] = train_fold(params, rng, fold)
-    return params_lst
+        lh_val_corr, rh_val_corr = train_fold(params, rng, fold)
+        lh_val_corrs.append(lh_val_corr)
+        rh_val_corrs.append(rh_val_corr)
+    return np.mean(lh_val_corrs).item() if hem == 'lh' else  np.mean(rh_val_corrs).item()
 
 
-def train_fold_fn(params, rng, fold, config: Dict, sweep_config) -> hk.Params:
+def train_fold_fn(params, rng, fold, config: Dict, loss_fn, subject, group) -> Tuple[float, float]:
     """train_fold function"""
     train_data, val_data = fold
-    best_lh_val_loss = np.inf
-    best_rh_val_loss = np.inf
-    config['n_params'] = sum([p.size for p in jax.tree_util.tree_leaves(params)])
-    config['epochs'] = int(config['n_steps'] // (len(train_data[0]) // config['batch_size']))
-    wandb.init(project="neuroscope", entity='syrkis', config=config, group=config['group_name'])
+    n_params = sum([p.size for p in jax.tree_util.tree_leaves(params)])
+    n_steps = config['parameters']['n_steps']['value']
+    batch_size = config['parameters']['batch_size']['value']
+    epochs = int(n_steps // (len(train_data[0]) // batch_size))
+    for_log = {'n_params': n_params, 'epochs': epochs, 'subject': subject, 'group': group}
+    wandb.init(project="neuroscope", entity='syrkis', config={**config, **for_log})
+
     # log horizontal algonauts baseline line
     linear_basline_metrics = algonauts_baseline(fold)
     opt_state = opt.init(params)
-    for step in tqdm(range(sweep_config['n_steps'])):
-        batch = get_batch(train_data, sweep_config['batch_size'])
+    for step in tqdm(range(n_steps)):
+        batch = get_batch(train_data, batch_size)
+        update = partial(update_fn, loss_fn=loss_fn)
         params, opt_state = update(params, rng, batch, opt_state)
-        if step % (sweep_config['n_steps'] // N_EVALS) == 0:
+        if step % (n_steps // N_EVALS) == 0:
             metrics = evaluate(params, rng, train_data, val_data, get_batch, config)
             wandb.log({**metrics, **linear_basline_metrics})  # plot is size is equally long for all n_steps. Add step number to change that
     wandb.finish()
-    return params
+    return metrics['lh_val_corr'], metrics['rh_val_corr']
 
 
 def get_batch(fold: Fold, batch_size: int) -> Batch:
@@ -93,8 +102,7 @@ def make_fold(folds: List[Fold], fold: int) -> Batch:  # TODO: make sure it is c
     return train_data, folds[fold]
 
 
-@jit
-def update(params: hk.Params, rng, batch: Batch, opt_state: optax.OptState) -> Tuple[hk.Params, optax.OptState]:
+def update_fn(params: hk.Params, rng, batch: Batch, opt_state: optax.OptState, loss_fn) -> Tuple[hk.Params, optax.OptState]:
     grads = grad(loss_fn)(params, rng, batch)
     # adamw with weight decay
     updates, opt_state = opt.update(grads, opt_state, params)

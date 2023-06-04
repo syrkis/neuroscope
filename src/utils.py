@@ -98,8 +98,8 @@ def get_args_and_config(args_lst=None):
     _rois = ",".join(ROIS)
     _roius = "EBA"
     # Load the YAML configuration file
-    with open('config/config.yaml', 'r') as f:
-        config = yaml.safe_load(f)
+    # with open('config/config.yaml', 'r') as f:
+    #     config = yaml.safe_load(f)
     with open('config/rois.yaml', 'r') as f:
         rois = yaml.safe_load(f)
 
@@ -107,12 +107,11 @@ def get_args_and_config(args_lst=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(f'--rois', type=str, default=_rois)
     parser.add_argument(f'--subjects', type=str, default=subjs)
-    parser.add_argument(f'--n_samples', type=int, default=None)
-    parser.add_argument(f'--alex', type=bool, default=False)
+    parser.add_argument(f'--k_folds', type=int, default=5)
 
     # Parse the arguments and return them as a dictionary
     if 'ipykernel' in sys.modules:
-        args_dict = {'rois': _rois, 'subjects': subjs, 'n_samples': 0, 'alex': True}
+        args_dict = {'rois': _rois, 'subjects': subjs, 'k_folds': 5}
         args_lst = [f'--{k}={v}' for k, v in args_dict.items()]
         args = parser.parse_args(args=args_lst)
     else:
@@ -121,10 +120,10 @@ def get_args_and_config(args_lst=None):
     with open('config/sweep.yaml', 'r') as f:
         sweep = yaml.safe_load(f)
 
-    config['sweep'] = sweep
-    config['n_samples'] = args.n_samples
-    config['rois'] = args.rois.replace(',', ', ')
-    config['subjects'] = args.subjects
+    config = sweep
+    # config['n_samples'] = args.n_samples
+    # config['rois'] = args.rois.replace(',', ', ')
+    # config['subjects'] = args.subjects
     return args, config
 
 

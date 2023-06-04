@@ -14,9 +14,8 @@ from multiprocessing import Pool
 def main():
     """main function"""
     args, config = get_args_and_config()
-    print(config['sweep'])
-    # data = get_data(args, config)
-    # train(data, args, config)
+    data = get_data(args)
+    train(data, config)
 
 
 # run main()
