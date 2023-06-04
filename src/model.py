@@ -22,6 +22,7 @@ LH_SIZE = config['lh_size']
 RH_SIZE = config['rh_size']
 ALPHA = config['alpha']
 BETA = config['beta']
+L2_REG = config['l2_reg']
 
 # rng
 rng = hk.PRNGSequence(jax.random.PRNGKey(42))
@@ -66,7 +67,8 @@ def loss_fn(params, batch):
     cat_loss = focal_loss(cat_hat, cat)
     fmri_loss = BETA * lh_loss + (1 - BETA) * rh_loss
     loss = ALPHA * fmri_loss + (1 - ALPHA) * cat_loss
-    return loss
+    regged_loss = loss + L2_REG * l2_reg(params)
+    return regged_loss
 
 def mse(pred, target):
     """loss function"""
@@ -87,3 +89,8 @@ def soft_f1(pred, target):
     """loss function"""
     _soft_f1 = jnp.mean(jnp.sum(2 * pred * target / (pred + target), axis=1))
     return _soft_f1
+
+def l2_reg(params):
+    """loss function"""
+    _l2_reg = jnp.sum(jnp.array([jnp.sum(p ** 2) for p in jax.tree_util.tree_leaves(params)]))
+    return _l2_reg

@@ -15,7 +15,7 @@ from typing import List, Tuple, Dict
 from functools import partial
 from tqdm import tqdm
 from src.model import init, loss_fn
-from src.eval import evaluate, save_best_model
+from src.eval import evaluate, save_best_model, algonauts_baseline
 from src.utils import config
 
 
@@ -61,6 +61,7 @@ def train_fold_fn(params, fold, config: Dict) -> hk.Params:
     config['epochs'] = config['n_steps'] // (len(train_data[0]) // config['batch_size'])
     wandb.init(project="neuroscope", entity='syrkis', config=config, group=config['group_name'])
     # log horizontal algonauts baseline line
+    linear_basline_metrics = algonauts_baseline(fold)
     opt_state = opt.init(params)
     for step in tqdm(range(config['n_steps'])):
         batch = get_batch(train_data, config['batch_size'])
@@ -69,7 +70,7 @@ def train_fold_fn(params, fold, config: Dict) -> hk.Params:
             metrics = evaluate(params, train_data, val_data, get_batch, config)
             best_lh_val_loss = save_best_model(params, metrics['val_lh_loss'], best_lh_val_loss, config['subject'], 'lh')
             best_rh_val_loss = save_best_model(params, metrics['val_rh_loss'], best_rh_val_loss, config['subject'], 'rh')
-            wandb.log(metrics, step=step)
+            wandb.log({**metrics, **linear_basline_metrics})  # plot is size is equally long for all n_steps. Add step number to change that
     wandb.finish()
     return params
 

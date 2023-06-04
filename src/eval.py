@@ -10,6 +10,7 @@ from tqdm import tqdm
 import numpy as np
 import yaml
 import pickle
+from sklearn.linear_model import LinearRegression
 from src.model import loss_fn, mse, bce, forward, soft_f1, focal_loss
 from src.utils import SUBJECTS
 
@@ -34,8 +35,8 @@ def evaluate(params, train_data, val_data, get_batch, config, steps=4):
     train_lh_corrs, train_rh_corrs = [], []
     val_losses, val_lh_losses, val_rh_losses, val_cat_losses = [], [], [], []
     val_lh_corrs, val_rh_corrs = [], []
-    alg_train_lh_corrs, alg_train_rh_corrs = [], []
-    alg_val_lh_corrs, alg_val_rh_corrs = [], []
+    # alg_train_lh_corrs, alg_train_rh_corrs = [], []
+    # alg_val_lh_corrs, alg_val_rh_corrs = [], []
     for _ in range(steps):
         train_batch = get_batch(train_data, batch_size)
         train_pred = forward(params, train_batch[0])
@@ -101,8 +102,8 @@ def evaluate(params, train_data, val_data, get_batch, config, steps=4):
         'val_lh_corr': np.mean(val_lh_corr),
         'train_rh_corr': np.mean(train_rh_corr),
         'val_rh_corr': np.mean(val_rh_corr),
-        'algonauts_lh_baseline_corr': algonauts_baseline[config['subject']]['lh'],
-        'algonauts_rh_baseline_corr': algonauts_baseline[config['subject']]['rh'],
+        #'algonauts_lh_baseline_corr': algonauts_baseline[config['subject']]['lh'],
+        #'algonauts_rh_baseline_corr': algonauts_baseline[config['subject']]['rh'],
         #'algonauts_train_lh_corr': np.mean(algonauts_train_lh_corr),
         #'algonauts_val_lh_corr': np.mean(algonauts_val_lh_corr),
         #'algonauts_train_rh_corr': np.mean(algonauts_train_rh_corr),
@@ -123,4 +124,24 @@ def get_algonauts_model(subject):
     lh_model = pickle.load(open(f"models/{subject}_lh_algonauts_model.pkl", 'rb'))
     rh_model = pickle.load(open(f"models/{subject}_rh_algonauts_model.pkl", 'rb'))
     return {'lh': lh_model, 'rh': rh_model}
+
+def algonauts_baseline(fold):
+    train_data, val_data = fold
+    img, lh, rh, _ = train_data
+    lh_model = LinearRegression().fit(img, lh)
+    rh_model = LinearRegression().fit(img, rh)
+    train_lh_pred = lh_model.predict(img)
+    train_rh_pred = rh_model.predict(img)
+    train_lh_corr = corr(train_lh_pred, lh)
+    train_rh_corr = corr(train_rh_pred, rh)
+    train_lh_corr = jnp.median(train_lh_corr)
+    train_rh_corr = jnp.median(train_rh_corr)
+    img, lh, rh, _ = val_data
+    val_lh_pred = lh_model.predict(img)
+    val_rh_pred = rh_model.predict(img)
+    val_lh_corr = corr(val_lh_pred, lh)
+    val_rh_corr = corr(val_rh_pred, rh)
+    val_lh_corr = jnp.median(val_lh_corr)
+    val_rh_corr = jnp.median(val_rh_corr)
+    return {'linear_lh_train_corr': train_lh_corr, 'linear_rh_train_corr': train_rh_corr, 'linear_lh_val_corr': val_lh_corr, 'linear_rh_val_corr': val_rh_corr}
 
