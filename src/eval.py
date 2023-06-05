@@ -61,8 +61,8 @@ def evaluate(params, rng, train_data, val_data, get_batch, config, steps=5):
         val_lh_losses.append(val_lh_loss)
         val_rh_losses.append(val_rh_loss)
         val_cat_losses.append(val_cat_loss)
-        val_lh_corrs.append(jnp.median(val_lh_corr))
-        val_rh_corrs.append(jnp.median(val_rh_corr))
+        val_lh_corrs.append(jnp.median(val_lh_corr))   # MEDIAN correlation across voxels
+        val_rh_corrs.append(jnp.median(val_rh_corr))   # MEDIAN correlation across voxels
 
         # test if any loss is nan
         if np.isnan(train_lh_loss) or np.isnan(val_lh_loss) or np.isnan(train_rh_loss) or np.isnan(val_rh_loss) or np.isnan(train_cat_loss) or np.isnan(val_cat_loss):
