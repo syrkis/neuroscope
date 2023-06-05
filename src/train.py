@@ -14,7 +14,8 @@ import wandb
 from typing import List, Tuple, Dict
 from functools import partial
 from tqdm import tqdm
-from src.model import loss_fn_base, network_fn
+from src.model import loss_fn_base
+from src.model import apple_network_fn as network_fn
 from src.eval import evaluate, algonauts_baseline
 
 
@@ -22,7 +23,7 @@ from src.eval import evaluate, algonauts_baseline
 opt = optax.adamw(0.001)  # perhaps hyper param search for lr and weight decay
 
 # globals
-N_EVALS = 100
+N_EVALS = 50
 
 # types
 Fold = Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray]
@@ -47,7 +48,7 @@ def train_subject(folds, subject, hem, sweep_id) -> Tuple[List[hk.Params], List[
     group = f'{subject}_{hem}'
     for idx, fold in enumerate(data):
         train_fold = partial(train_fold_fn, subject=subject, group=group, rng=rng, fold=fold, idx=idx)
-        wandb.agent(sweep_id, train_fold, count=4)
+        wandb.agent(sweep_id, train_fold, count=2)
 
 
 def train_fold_fn(rng, fold, idx, subject, group) -> Tuple[float, float]:
@@ -57,6 +58,8 @@ def train_fold_fn(rng, fold, idx, subject, group) -> Tuple[float, float]:
         config = wandb.config
         # add hem to config
         config['hem'] = group.split('_')[1]
+        config['fold'] = fold_idx
+        config['subject'] = subject
         # update config log with fold numbers
         forward = hk.transform(partial(network_fn, config=config))
         loss_fn = partial(loss_fn_base, forward_fn=forward, config=config)
@@ -92,7 +95,7 @@ def make_fold(folds: List[Fold], fold: int) -> Batch:  # TODO: make sure it is c
     train_lh = [f[1] for f in folds[:fold] + folds[fold + 1:]]
     train_rh = [f[2] for f in folds[:fold] + folds[fold + 1:]]
     train_cats = [f[3] for f in folds[:fold] + folds[fold + 1:]]
-    train_data = tuple(map(jnp.concatenate, [train_imgs, train_lh, train_rh, train_cats]))
+    train_data = tuple(map(jnp.vstack, [train_imgs, train_lh, train_rh, train_cats]))
     return train_data, folds[fold]
 
 def update_fn(params: hk.Params, rng, batch: Batch, opt_state: optax.OptState, loss_fn) -> Tuple[hk.Params, optax.OptState]:

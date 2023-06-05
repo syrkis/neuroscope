@@ -19,9 +19,9 @@ parameters:
   n_layers:
     value: 2
   dropout:
-    value: 0.20
+    value: 0.1
   n_steps:
-    value: 4000
+    value: 8000
   latent_dim:
     value: 100
   k_folds:

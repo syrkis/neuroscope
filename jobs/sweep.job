@@ -3,10 +3,10 @@
 #SBATCH --job-name=neuroscope      # Job name
 #SBATCH --output=logs/sweep.log    # Name of output file
 #SBATCH --cpus-per-task=4          # Schedule one core
-#SBATCH --time=03:00:00            # Run time (hh:mm:ss)
+#SBATCH --time=06:00:00            # Run time (hh:mm:ss)
 #SBATCH --partition=red            # Run on either the Red or Brown queue
 #SBATCH --gres=gpu:v100:1          # Schedule a GPU
-#SBATCH --mem=30G                  # memory
+#SBATCH --mem=40G                  # memory
 #SBATCH --account=students         # account
 
 
