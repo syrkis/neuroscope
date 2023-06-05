@@ -19,7 +19,7 @@ parameters:
   n_layers:
     value: 2
   dropout:
-    value: 0.4
+    value: 0.20
   n_steps:
     value: 4000
   latent_dim:

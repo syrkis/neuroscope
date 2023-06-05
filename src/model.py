@@ -13,28 +13,28 @@ from functools import partial
 def network_fn(img, config, training=True):  # this now needs a conf (use partial)
     """network function"""
     # TODO: add dropout if training
-    n_units = config['parameters']['n_units']['value']
-    n_layers = config['parameters']['n_layers']['value']
-    latent_dim = config['parameters']['latent_dim']['value']
+    n_units = config.n_units
+    n_layers = config.n_layers
+    latent_dim = config.latent_dim
     cat_size = 80
     lh_size = 19004
     rh_size = 20544
-    dropout = config['parameters']['dropout']['value']
+    dropout = config.dropout
     img_mlp = hk.Sequential([
         hk.nets.MLP([n_units] * n_layers, activation=jnp.tanh),
         hk.Linear(latent_dim),
     ])
     cat_mlp = hk.Sequential([
-        hk.nets.MLP([n_units] * n_layers, activation=jnp.tanh),
+        hk.nets.MLP([n_units] * 1, activation=jnp.tanh),
         hk.Linear(cat_size),
         jax.nn.sigmoid,
     ])
     lh_mlp = hk.Sequential([
-        hk.nets.MLP([n_units] * n_layers, activation=jnp.tanh),
+        hk.nets.MLP([n_units] * 1, activation=jnp.tanh),
         hk.Linear(lh_size),
     ])
     rh_mlp = hk.Sequential([
-        hk.nets.MLP([n_units] * n_layers, activation=jnp.tanh),
+        hk.nets.MLP([n_units] * 1, activation=jnp.tanh),
         hk.Linear(rh_size),
     ])
     img = hk.dropout(hk.next_rng_key(), dropout, img) if training else img
@@ -49,8 +49,8 @@ def network_fn(img, config, training=True):  # this now needs a conf (use partia
 # use rng
 def loss_fn_base(params, rng, batch, forward_fn, config):   # this now takes a forward and conf
     """loss function"""
-    beta = config['parameters']['beta']['value']
-    alpha = config['parameters']['alpha']['value']
+    beta = config.beta
+    alpha = config.alpha
     img, lh, rh, cat = batch
     lh_hat, rh_hat, cat_hat = forward_fn.apply(params, rng, img)
     lh_loss = mse(lh_hat, lh)

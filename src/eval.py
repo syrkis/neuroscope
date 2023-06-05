@@ -7,6 +7,7 @@
 import jax.numpy as jnp
 from jax import vmap
 from tqdm import tqdm
+import haiku as hk
 import numpy as np
 import pickle
 from sklearn.linear_model import LinearRegression
@@ -25,16 +26,15 @@ def corr(pred, target):
 
 
 # evaluate during training
-def evaluate(params, rng, train_data, val_data, get_batch, sweep_config, steps=10):
+def evaluate(params, rng, train_data, val_data, get_batch, config, steps=5):
     """evaluate function"""
-    forward = partial(network_fn, config=sweep_config)
-    batch_size = sweep_config['batch_size']
+    forward = hk.transform(partial(network_fn, config=config))
     train_lh_losses, train_rh_losses, train_cat_losses = [], [], []
     train_lh_corrs, train_rh_corrs = [], []
     val_lh_losses, val_rh_losses, val_cat_losses = [], [], []
     val_lh_corrs, val_rh_corrs = [], []
     for _ in range(steps):
-        train_batch = get_batch(train_data, batch_size)
+        train_batch = get_batch(train_data, config.batch_size)
         train_pred = forward.apply(params, rng, train_batch[0])
 
         train_lh_loss = mse(train_pred[0], train_batch[1])
@@ -49,7 +49,7 @@ def evaluate(params, rng, train_data, val_data, get_batch, sweep_config, steps=1
         train_lh_corrs.append(jnp.median(train_lh_corr))
         train_rh_corrs.append(jnp.median(train_rh_corr))
 
-        val_batch = get_batch(val_data, batch_size)
+        val_batch = get_batch(val_data, config.batch_size)
         val_pred = forward.apply(params, rng, val_batch[0], training=False)
 
         val_lh_loss = mse(val_pred[0], val_batch[1])

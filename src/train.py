@@ -30,59 +30,51 @@ Batch = Fold
 
 
 # functions
-def train(data, config):
+def sweep(data, config):
     """train function"""
-    group = wandb.util.generate_id()
-    for subject, (folds, _) in data.items():
-        # do sweep here
-        #sweep_id = wandb.sweep(sweep=config, entity='syrkis', project='neuroscope')
-        #sweep_train = partial(train_subject, folds=folds, subject=subject, group=group, hem='lh')
-        #wandb.agent(sweep_id, sweep_train, count=10)
-        sweep_train = partial(train_subject, folds=folds, subject=subject, group=group, hem='rh')
-        sweep_train(config)
-        #wandb.agent(sweep_id, sweep_train, count=10)
+    for hem in ['lh', 'rh']:
+        config['metric']['name'] = f'val_{hem}_corr'
+        sweep_id = wandb.sweep(sweep=config, entity='syrkis', project='neuroscope')
+        for subject, (folds, _) in data.items():
+            train_subject(folds, subject, hem, sweep_id)
 
 
-def train_subject(config, folds, subject, group, hem) -> Tuple[List[hk.Params], List[hk.Params]]:
+def train_subject(folds, subject, hem, sweep_id) -> Tuple[List[hk.Params], List[hk.Params]]:
     """train function"""
-    # config = wandb.config
     # TODO: parallelize using pmap or vmap
     rng = jax.random.PRNGKey(42)
-    forward = hk.transform(partial(network_fn, config=config))
-    loss_fn = partial(loss_fn_base, forward_fn=forward, config=config)
-    params_lst = [forward.init(rng, img[:1]) for img, _, _, _ in folds]
     data = [make_fold(folds, fold) for fold in range(len(folds))]  # (train_data, val_data) list
-    train_fold = partial(train_fold_fn, config=config, loss_fn=loss_fn, subject=subject, group=group)
-    lh_val_corrs, rh_val_corrs = [], []
-    for idx, (params, fold) in enumerate(zip(params_lst, data)):
-        lh_val_corr, rh_val_corr = train_fold(params, rng, fold)
-        lh_val_corrs.append(lh_val_corr)
-        rh_val_corrs.append(rh_val_corr)
-    return np.mean(lh_val_corrs).item() if hem == 'lh' else  np.mean(rh_val_corrs).item()
+    group = f'{subject}_{hem}'
+    for idx, fold in enumerate(data):
+        train_fold = partial(train_fold_fn, subject=subject, group=group, rng=rng, fold=fold, idx=idx)
+        wandb.agent(sweep_id, train_fold, count=3)
 
 
-def train_fold_fn(params, rng, fold, config: Dict, loss_fn, subject, group) -> Tuple[float, float]:
+def train_fold_fn(rng, fold, idx, subject, group) -> Tuple[float, float]:
     """train_fold function"""
-    train_data, val_data = fold
-    n_params = sum([p.size for p in jax.tree_util.tree_leaves(params)])
-    n_steps = config['parameters']['n_steps']['value']
-    batch_size = config['parameters']['batch_size']['value']
-    epochs = int(n_steps // (len(train_data[0]) // batch_size))
-    for_log = {'n_params': n_params, 'epochs': epochs, 'subject': subject, 'group': group}
-    wandb.init(project="neuroscope", entity='syrkis', config={**config, **for_log})
-
-    # log horizontal algonauts baseline line
-    linear_basline_metrics = algonauts_baseline(fold)
-    opt_state = opt.init(params)
-    for step in tqdm(range(n_steps)):
-        batch = get_batch(train_data, batch_size)
-        update = partial(update_fn, loss_fn=loss_fn)
-        params, opt_state = update(params, rng, batch, opt_state)
-        if step % (n_steps // N_EVALS) == 0:
-            metrics = evaluate(params, rng, train_data, val_data, get_batch, config)
-            wandb.log({**metrics, **linear_basline_metrics})  # plot is size is equally long for all n_steps. Add step number to change that
-    wandb.finish()
-    return metrics['lh_val_corr'], metrics['rh_val_corr']
+    fold_idx = idx + 1
+    with wandb.init(project="neuroscope", entity='syrkis', group=group, reinit=True, id=f'{subject}_{fold_idx}') as run:
+        config = wandb.config
+        # update config log with fold numbers
+        forward = hk.transform(partial(network_fn, config=config))
+        loss_fn = partial(loss_fn_base, forward_fn=forward, config=config)
+        params = forward.init(rng, fold[0][0])
+        n_params = sum([p.size for p in jax.tree_util.tree_leaves(params)])
+        train_data, val_data = fold
+        epochs = int(config.n_steps // (len(train_data[0]) // config.batch_size))
+        wandb.config.update({'fold': idx + 1, 'subject': subject, 'group': group, 'n_params': n_params, 'epochs': epochs})
+        linear_basline_metrics = algonauts_baseline(fold)  # might make sense to precompute
+        opt_state = opt.init(params)
+        for step in tqdm(range(config.n_steps)):
+            batch = get_batch(train_data, config.batch_size)
+            update = partial(update_fn, loss_fn=loss_fn)
+            params, opt_state = update(params, rng, batch, opt_state)
+            if step % (config.n_steps // N_EVALS) == 0:
+                metrics = evaluate(params, rng, train_data, val_data, get_batch, config)
+                wandb.log({**metrics, **linear_basline_metrics})  # plot is size is equally long for all n_steps. Add step number to change that
+        wandb.finish()
+        metrics = evaluate(params, rng, train_data, val_data, get_batch, config, steps=50)
+        return metrics['val_lh_corr'], metrics['val_rh_corr']
 
 
 def get_batch(fold: Fold, batch_size: int) -> Batch:
