@@ -94,7 +94,7 @@ def get_files(subject, split="training"):
 
 
 def get_args_and_config(args_lst=None):
-    subjs = 'subj01,subj02'   #,subj03,subj04,subj05,subj07'  # skip 6 and 8 because fmri dim differs
+    subjs = 'subj01,subj02,subj03,subj04,subj05,subj07'  # skip 6 and 8 because fmri dim differs
     _rois = ",".join(ROIS)
     _roius = "EBA"
     # Load the YAML configuration file
@@ -108,6 +108,7 @@ def get_args_and_config(args_lst=None):
     parser.add_argument(f'--rois', type=str, default=_rois)
     parser.add_argument(f'--subjects', type=str, default=subjs)
     parser.add_argument(f'--k_folds', type=int, default=5)
+    parser.add_argument(f'--sweep', action='store_true')
 
     # Parse the arguments and return them as a dictionary
     if 'ipykernel' in sys.modules:

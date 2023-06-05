@@ -14,7 +14,7 @@ some title ideas:
 
 Developing a computational model of how the brain decodes visual information is an important goal in neuroscience. In this project, focus on improving the encoding model of the Algonauts Challenge. Our approach, rather than deepening the model, is to add a modality during training. Specifically, we add a vector of semantic features to image shown to the subject as the fMRI data is collected. We find that this improves the performance of the model.
 
-# Introduction
+## Introduction
 
 first section (general introduction)... [importance of problem, short study aim] 
 

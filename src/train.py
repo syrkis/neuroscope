@@ -47,7 +47,7 @@ def train_subject(folds, subject, hem, sweep_id) -> Tuple[List[hk.Params], List[
     group = f'{subject}_{hem}'
     for idx, fold in enumerate(data):
         train_fold = partial(train_fold_fn, subject=subject, group=group, rng=rng, fold=fold, idx=idx)
-        wandb.agent(sweep_id, train_fold, count=3)
+        wandb.agent(sweep_id, train_fold, count=4)
 
 
 def train_fold_fn(rng, fold, idx, subject, group) -> Tuple[float, float]:
@@ -55,6 +55,8 @@ def train_fold_fn(rng, fold, idx, subject, group) -> Tuple[float, float]:
     fold_idx = idx + 1
     with wandb.init(project="neuroscope", entity='syrkis', group=group, reinit=True, id=f'{subject}_{fold_idx}') as run:
         config = wandb.config
+        # add hem to config
+        config['hem'] = group.split('_')[1]
         # update config log with fold numbers
         forward = hk.transform(partial(network_fn, config=config))
         loss_fn = partial(loss_fn_base, forward_fn=forward, config=config)
@@ -65,9 +67,9 @@ def train_fold_fn(rng, fold, idx, subject, group) -> Tuple[float, float]:
         wandb.config.update({'fold': idx + 1, 'subject': subject, 'group': group, 'n_params': n_params, 'epochs': epochs})
         linear_basline_metrics = algonauts_baseline(fold)  # might make sense to precompute
         opt_state = opt.init(params)
+        update = jit(partial(update_fn, loss_fn=loss_fn))
         for step in tqdm(range(config.n_steps)):
             batch = get_batch(train_data, config.batch_size)
-            update = partial(update_fn, loss_fn=loss_fn)
             params, opt_state = update(params, rng, batch, opt_state)
             if step % (config.n_steps // N_EVALS) == 0:
                 metrics = evaluate(params, rng, train_data, val_data, get_batch, config)
@@ -92,7 +94,6 @@ def make_fold(folds: List[Fold], fold: int) -> Batch:  # TODO: make sure it is c
     train_cats = [f[3] for f in folds[:fold] + folds[fold + 1:]]
     train_data = tuple(map(jnp.concatenate, [train_imgs, train_lh, train_rh, train_cats]))
     return train_data, folds[fold]
-
 
 def update_fn(params: hk.Params, rng, batch: Batch, opt_state: optax.OptState, loss_fn) -> Tuple[hk.Params, optax.OptState]:
     grads = grad(loss_fn)(params, rng, batch)

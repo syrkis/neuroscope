@@ -51,13 +51,16 @@ def loss_fn_base(params, rng, batch, forward_fn, config):   # this now takes a f
     """loss function"""
     beta = config.beta
     alpha = config.alpha
+    hem = config.hem
     img, lh, rh, cat = batch
     lh_hat, rh_hat, cat_hat = forward_fn.apply(params, rng, img)
     lh_loss = mse(lh_hat, lh)
     rh_loss = mse(rh_hat, rh)
     cat_loss = focal_loss(cat_hat, cat)
-    fmri_loss = beta * lh_loss + (1 - beta) * rh_loss
-    loss = alpha * fmri_loss + (1 - alpha) * cat_loss
+    hem_loss = lh_loss if hem == 'lh' else rh_loss
+    not_hem_loss = rh_loss if hem == 'lh' else lh_loss
+    fmri_loss = (1 - beta) * hem_loss + beta * not_hem_loss
+    loss = (1 - alpha) * fmri_loss + alpha * cat_loss
     return loss
 
 def mse(pred, target):
