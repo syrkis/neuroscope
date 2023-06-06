@@ -18,7 +18,7 @@ Neuroimaging techniques like fMRI have facilitated valuable insights into the ne
 
 The experiment presented here explores how an additional modality might contribute to developing a model of the brain's visual encoding system, _without_ a large increase in complexity/parameter count. The additional modality used here is a semantic feature vector, derived from the COCO dataset, describing the object categories contained in each image. The two models we developed are tasked with 1) predicting the brain response given the image and knowledge of what is in the image, and 2) predicting the brain response and the semantic contents of the image.
 
-## Literature review
+## Literature Review
 
 ### Visual information processing
 
@@ -83,7 +83,7 @@ The cornerstone of our experiment involves hyperparameter optimization, carried 
 
 To search for the optimal values of $\alpha$ and $beta$, we initiated a wandb sweep with Bayesian optimization and optimized with respect to validation left hemisphere correlation in one sweep, and validation right hemisphere correlation in the other sweep. This strategy enables a directed search in hyperparameter space, making it a more efficient and effective approach for hyperparameter tuning than random search or grid search. Additionally, we employed a K-fold cross-validation technique for model evaluation, providing a more robust estimate of the model's performance and optimal hyperparameters. K was set to 5. Every fold for every subject ran twice to get samples during the Bayesian optimization.
 
-## Results
+## Results and Analysis
 
 
 In __table 1__ we see the mean median voxel correlations for the two hemisphere versions of model 1 (the primary model with the auxiliary task) trained with and without $\alpha$ and $\beta$ set to 0. The none baseline has $\alpha = 0.5$ and $\beta = 0.25$. __Table 1__ shows us that our multimodal baseline outperforms the baseline on the test data. Further analysis would however be needed to explore the significance hereof. We also see that the _baseline_ performs better on the train data. The baseline is thus, everything else being equal, overfitting more than its multimodal counterpart. This could be an indication that our semantic vector does indeed have a regularising effect.
@@ -119,9 +119,8 @@ Table: Mean Median Voxel Correlation (Model 2).
 
 A mean (across all subjects and folds) median voxel correlation projection onto a common cortical atlas is available interactively at neuroscope.streamlit.app/.
 
-## Analysis and Discussion
 
-## Future Work
+## Discussion and Future Work
 
 As seen in the Analysis and Discussion, it appears that the semantic vector modality is not particularly useful for the model. A logical next step would be to experiment with extracting the image representations from different, or multiple AlexNet layers, or using an entirely different model for the image representation extraction. We might also explore using more rich COCO modalities such as image captions and object bounding boxes. Lastly, from a neuroscientific perspective, the ROIs of the brain are considered to be different modalities: they function by vastly different rules. Processing the ROIs separately might allow for models tailoring to specific ROI idiosyncrasies.
 
