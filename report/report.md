@@ -8,12 +8,11 @@ date: \today
 
 ## Abstract
 
-Understanding how the brain encodes visual information is a key challenge in neuroscience. In this project, we attempt to address this challenge by constructing a multimodal encoding model based on the Algonauts Project 2023 dataset. In addition to the dataset's image modality, we incorporate a semantic feature vector that describes object categories contained in the image shown to the subject during the functional Magnetic Resonance Imaging (fMRI) data collection. We combine various linear modules to construct two models: one predicting the fMRI data from both the associated image and the image's associated semantic feature vector; the other predicting both the fMRI data and the semantic vector from the image alone. Bayesian hyperparameter optimization suggests that the latter approach could potentially enhance model performance during inference without increasing the number of parameters. The model's performance was evaluated using a 5-fold cross-validation strategy and the median Pearson correlation coefficient as the metric. The code for this project is accessible at github.com/syrkis/neuroscope, and training logs can be inspected at wandb.ai/syrkis/neuroscope.
+Understanding how the brain encodes visual information is a key challenge in neuroscience. In this project, we attempt to address this challenge by constructing a multimodal encoding model based on the Algonauts Project 2023 dataset. In addition to the dataset's image modality, we incorporate a semantic feature vector that describes object categories contained in the image shown to the subject during the functional Magnetic Resonance Imaging (fMRI) data collection. We combine various linear modules to construct two models: one predicting the fMRI data from both the associated image and the image's associated semantic feature vector; the other predicting both the fMRI data and the semantic vector from the image alone. Bayesian hyperparameter optimization suggests that the latter approach could potentially enhance model performance during inference without increasing the number of parameters. The model's performance was evaluated using a 5-fold cross-validation strategy and the median Pearson correlation coefficient as the metric. The code for this project is accessible at github.com/syrkis/neuroscope, and training logs are available at wandb.ai/syrkis/neuroscope.
 
 ## Introduction
 
-
-Visual processing is the principal modality through which we interact and decipher our environment. Over the years, substantial progress has been made in understanding how the brain processes visual information, with even surprising parallels observed between artificial and biological vision processing [Cite]. However, as reality can exhibit extraordinarily different visual fingerprints—from simple geometric shapes to complex landscapes and visual noise—any system capable of visual perception is necessarily complicated. Fully capturing this complexity and intricacy remains a challenge. This challenge is the focus of the 2023 Algonauts Project^[[http://algonauts.csail.mit.edu/](http://algonauts.csail.mit.edu/)]. The Algonauts Project's 2023 dataset is based on the Natural Scenes Dataset (NSD), which couples images from the Common Objects in Context (COCO) dataset [@lin2014] with fMRI responses to those images from various participants.
+Visual processing is the principal modality through which we interact and decipher our environment. Over the years, substantial progress has been made in understanding how the brain processes visual information, with even surprising parallels observed between artificial and biological vision processing [Cite]. However, as reality can exhibit extraordinarily different visual fingerprints—from simple geometric shapes to complex landscapes and visual noise—any system capable of visual perception is necessarily complicated. Fully capturing this complexity and intricacy remains a challenge. It this challenge that is the focus of the 2023 Algonauts Project^[[http://algonauts.csail.mit.edu/](http://algonauts.csail.mit.edu/)]. The Algonauts Project's 2023 dataset is based on the Natural Scenes Dataset (NSD), which couples images from the Common Objects in Context (COCO) dataset [@lin2014] with fMRI responses to those images from various participants.
 
 Neuroimaging techniques like fMRI have facilitated valuable insights into the neural correlates of visual perception. However, the potential of these techniques has been somewhat constrained by computational model limitations and the expense and time required to collect large-scale fMRI datasets. Amid these challenges, deep learning has proven to be a powerful tool, that has facilitated a better understanding and emulation of human visual perception. Recent efforts to incorporate multimodality into deep learning models have opened promising avenues to bridge the gap between computational models and the brain's complexity.
 
@@ -42,33 +41,31 @@ However, most of these models rely on single-modal input data, typically the vis
 
 ## Methodology
 
-Our methodology is that of a supervised machine learning experiment. We have access to preprocessed fMRI scans showcasing the ​blood oxygen level-dependent (BOLD) response to a variety of images. Our primary objective is to construct a multimodal model that has as many parameters during inference as its unimodal counterpart, and yet better predicts the brain's response to a given image. This section outlines the steps and components involved in the execution of our experiment.
+Our methodology is that of a supervised machine learning experiment. We have access to preprocessed fMRI scans showcasing the ​blood oxygen level-dependent (BOLD) response to a variety of images. Our primary objective is to construct a multimodal model that has as many parameters during inference as its unimodal counterpart, and yet better predicts the brain's response to a given image. This section outlines the steps and components involved in the execution of our experiment. It should be noted that, in accoradance with the Algonauts Project, median Pearson correlation between voxels in the ground truth and the prediction is used as the target metric (though not as a loss function).
 
 ### Data
 
-The data underpinning our experiment is provided by the Algonauts Project [@gifford2023], and is initially derived from the Natural Scenes Dataset (NSD) [@allen2022]. The NSD is currently the largest dataset of its kind, encompassing cortical surface vertices from the left and right hemispheres of eight participants' brains. These vertices correspond to the neurological responses triggered by 73,000 COCO images used by the NSD, each image depicting natural scenes. In addition to category information for each image, the COCO dataset provides other valuable metadata such as object location boxes and caption lists. Our experiment focused on the COCO object category information. The images in the NSD contains 80 different kinds of object, with most images containing multiple object kinds (for example a horse and a person). As per the Algonauts guide^[https://colab.research.google.com/drive/1bLJGP3bAo_hAOwZPHpiSHKlt97X9xsUw], we represented each image using the dimensionalty reduction method principal component analysis (PCA) of the all the image's activations in the 2012 image model Alexnet's second layer [@krizhevsky2012]. As in the Algonauts guide, PCA was perfromed reducing each image to a vector of size 100.
+The data underpinning our experiment is provided by the Algonauts Project [@gifford2023], and is initially derived from the Natural Scenes Dataset (NSD) [@allen2022]. The NSD is currently the largest dataset of its kind, encompassing cortical surface vertices from the left and right hemispheres of eight participants' brains. These vertices correspond to the neurological responses triggered by 73,000 COCO images used by the NSD, each image depicting natural scenes. In addition to category information for each image, the COCO dataset provides other valuable metadata such as object location boxes and caption lists. Our experiment focused on the COCO object category information. The images in the NSD contains 80 different kinds of objects, with most images containing multiple object kinds (for example a horse and a person). As per the Algonauts guide^[https://colab.research.google.com/drive/1bLJGP3bAo_hAOwZPHpiSHKlt97X9xsUw], we represented each image using the dimensionality reduction method principal component analysis (PCA) of the all the image's activations in the 2012 image model Alexnet's second layer [@krizhevsky2012]. As in the Algonauts guide, PCA was performed reducing each image to a vector of size 100.
 
-Over the course of a year, each participant in the NSD study was exposed to 10,000 unique images, with each image presented three times, resulting in 30,000 image trials per participant. The corresponding fMRI data comprises 19,004 and 20,544 voxels for the left and right hemispheres, respectively. These voxel counts were selected based on preprocessed, high-quality 7T fMRI responses measuring as BOLD response amplitudes. Also included in the dataset are region of interest (ROI) masks for each subject, which aid in extracting specific fMRI data from certain locations in the brain.
-
-We eliminated subjects 6 and 8 from the experiment due to missing data (voxel counts differed from 19004 and 20544 for the left and right hemispheres respectively).
+Over the course of a year, each participant in the NSD study was exposed to 10,000 unique images, with each image presented three times, resulting in 30,000 image trials per participant. The corresponding fMRI data comprises 19,004 and 20,544 voxels for the left and right hemispheres, respectively. These voxel counts were selected based on preprocessed, high-quality 7T fMRI responses measuring as BOLD response amplitudes. Also included in the dataset are region of interest (ROI) masks for each subject, which aid in extracting specific fMRI data from certain locations in the brain. The fMRI data has been mapped to Harvard’s FsAverage atlas such that the voxels are comparable across individuals.  We eliminated subjects 6 and 8 from the experiment due to missing data (voxel counts differed from 19,004 and 20,544 for the left and right hemispheres respectively). We thus trained on six subjects.
 
 ### Models
 
-The purpose of our models is to infer the BOLD response from a given image. The architecture of our primary model involves taking a vector representation of an image $x$, and outputting a tuple consisting of the left hemisphere BOLD response $y_{lh}$, right hemisphere BOLD response $y_{rh}$, and a semantic feature vector $y_c$ for optimization against the COCO data. This model is partitioned into four submodules, each an MLP processing one of the four variables ($x$, $y_{lh}$, $y_{rh}$, and $y_c$).
+The purpose of our models is to infer the BOLD response from a given image. The architecture of our primary model involves taking a vector representation of an image $x$, and outputting a tuple consisting of the left hemisphere BOLD response $y_{lh}$, right hemisphere BOLD response $y_{rh}$, and a semantic feature vector $y_c$ for optimization against the COCO data. This model is partitioned into four submodules, each an MLP processing one of the four variables ($x$, $y_{lh}$, $y_{rh}$, and $y_c$). Our baseline will be a unimodal version of this model. We aim to test if including the semantic modality improves performance. 
 
-The first module, referred to as the image encoding module, maps the input image vector $x$ onto a latent space, thereby generating a latent vector $z$, which is subsequently fed into the remaining three modules responsible for predicting the outputs. As suggested by the Algonauts challenge baseline, the latent vector $z$ maintains a dimensionality of 100. Given that each hemisphere's voxel count is approximately 20k, the linear mapping from the latent space to the voxel space demands around 2 million parameters. Therefore, even with such a compact latent space, the minimum required parameter count approximates 4 million.
+The first module, referred to as the image encoding module, maps the input image vector $x$ onto a latent space, thereby generating a latent vector $z$, which is subsequently fed into the remaining three modules responsible for predicting the outputs. As suggested by the Algonauts challenge baseline, the latent vector $z$ maintains a dimensionality of 100. Given that each hemisphere's voxel count is approximately 20k, the linear mapping from the latent space to the voxel space demands around 2 million parameters. Therefore, even with such a compact latent space, the minimum required parameter count is approximately 4 million.
 
-Our second model used $y_c$ as input, concatenating it with $x$. The purpose of this model was to gauge the potential of multimodality on the input side of the network.
+Our second model used $y_c$ as input, concatenating it with $x$. The purpose of this model was to gauge the potential of multimodality on the input side of the network. This model is not our main focuses, but rather a test to gauge the usefulness of this particular kind of multimodality.
 
-All hidden layers used the tanh activation function, dropout of 0.1, and weight decay of 0.0001 with the AdamW optimizer from Optax. The models were implemented in Jax with Haiku. The shared (first) module had two layers, with 100 units each, to create some flexibility as the input to all other modules flowed through it. The rest of the modules mapped the latent vector input to whatever output dimension their modality had. The learning rate was 0.001 and the batch size was 32. Hyperparameter optimization was not done on the aforementioned hyperparameters due to computational constraints.
+All hidden layers used the tanh activation function, dropout of 0.1, and weight decay of 0.0001 with the AdamW optimizer from Optax. The models were implemented in Jax with Haiku(CITE). The shared (first) module had two layers, with 100 units each, to create some flexibility as the input to all other modules (the latent vector $z$) flowed through that initial module. The rest of the modules mapped the latent vector input to whatever output dimension their modality had. The learning rate was 0.001 and the batch size was 32. Hyperparameter optimization was not done on the aforementioned hyperparameters due to computational constraints.
 
 The primary model (with the auxiliary task of predicting $y_c$ during training), had two experiment-specific hyperparameters, $\alpha$ and $\beta$, weighing $y_c$ and whatever hemisphere was not being optimized for respectively in the loss function. The model used mean squared error for optimizing the fMRI predictions and binary soft f1 loss for $y_c$ due to a heavy imbalance between categories. Using regular binary cross entropy would yield a low loss by guessing all zeros, as most images contain only a few categories.
 
 ### Experiments
-  
+  
 #### Incorporating Category Vector Modality and Semantic Vector Representation
 
-To unlock the potential utility of the semantic vector, we designed our experiment with a multimodal approach. This involved integrating the category vector modality (model 2) by concatenating it with the image vector derived from AlexNet, an auxiliary task to predict the category during training (model 1), and tuning the $\alpha$ and $\beta$ parameters weighting the importance of the auxiliary tasks in the loss function. Additional motivation for the inclusion of the auxiluary modalities is the potential avoidance of overfitting; finding inapropraite shortcuts in the data becomes more difficult if the short cuts also have to make sense of the semantic vector.
+To unlock the potential utility of the semantic vector, we designed our experiment with a multimodal approach. This involved integrating the category vector modality (model 2) by concatenating it with the image vector derived from AlexNet, an auxiliary task to predict the category during training (model 1), and tuning the $\alpha$ and $\beta$ parameters weighting the importance of the auxiliary tasks in the loss function. Additional motivation for the inclusion of the auxiliary modalities is the potential avoidance of overfitting; finding inappropriate shortcuts in the data becomes more difficult if the shortcuts also have to make sense of the semantic vector.
 
 #### Model Training, Auxiliary Tasks, and Hemisphere Balancing
 
@@ -76,29 +73,31 @@ Two key hyperparameters, $\alpha$ and $\beta$, were used to balance the differen
 
 #### Hyperparameter Optimization and Loss Function Design
 
-The cornerstone of our experiment involves hyperparameter optimization, carried out using the Weights & Biases (wandb) sweeps with wandb's Bayesian optimization techniques. The loss function is expressed as (1 - $\alpha$)((1 - $\beta$)$Loss{y_{lh}}$ + $\beta$ $Loss{y_{rh}}$) + $\alpha$ $Loss_{y_c}$, when optimising for $y_{lh}$ and flipping the $\beta$ when optimsing for $y_{rh}$. $\alpha$ serves as a weighting factor determining the trade-off between the fMRI prediction task and the category prediction task, while $\beta$ control the balance between the losses of the two hemispheres.
+The cornerstone of our experiment involves hyperparameter optimization, carried out using the Weights & Biases (wandb) sweeps with wandb's Bayesian optimization techniques. The loss function is expressed as (1 - $\alpha$)((1 - $\beta$)$Loss{y_{lh}}$ + $\beta$ $Loss{y_{rh}}$) + $\alpha$ $Loss_{y_c}$, when optimizing for $y_{lh}$ and flipping the $\beta$ when optimizing for $y_{rh}$. $\alpha$ serves as a weighting factor determining the trade-off between the fMRI prediction task and the category prediction task, while $\beta$ controls the balance between the losses of the two hemispheres.
 
 #### Bayesian Optimization and Cross-Validation
 
-To search for the optimal values of $\alpha$ and $beta$, we initiated a wandb sweep with Bayesian optimization. This strategy enables a directed search of the hyperparameter space, making it a more efficient and effective approach for high-dimensional hyperparameter tuning than random search or grid search. Additionally, we employed a K-fold cross-validation technique for model evaluation and hyperparameter optimization, providing a more robust estimate of the model's performance and optimal hyperparameters. K has set to 5. Every fold for every subject ran twice to get furing the Bayesean optimization.
+To search for the optimal values of $\alpha$ and $beta$, we initiated a wandb sweep with Bayesian optimization and optimized with respect to validation left hemisphere correlation in one sweep, and validation right hemisphere correlation in the other sweep. This strategy enables a directed search in hyperparameter space, making it a more efficient and effective approach for hyperparameter tuning than random search or grid search. Additionally, we employed a K-fold cross-validation technique for model evaluation, providing a more robust estimate of the model's performance and optimal hyperparameters. K was set to 5. Every fold for every subject ran twice to get samples during the Bayesian optimization.
 
-## Results and analysis
+## Results
 
-In __table 1__ we see the mean median voxel correlations across all subjects and folds of model 1 with (Alex + COCO) and without (Alex) the COCO vector concatenated to the Alex vector.  TODO: Update with test data
 
-| Hemisphere | Train, Alex/COCO | Train, Alex | Val, Alex/COCO | Val, Alex |
-|------------|-----------------:|------------:|---------------:|----------:|
-| Left       | __0.2176__       | 0.2059      | __0.1959__     | 0.1957    |
-| Right      | __0.2155__       | 0.2046      | __0.1933__     | 0.1917    |
+In __table 1__ we see the mean median voxel correlations for versions of model 1 (the primary model with auxiliary task) trained with and without $\alpha$ and $\beta$ set to 0. To reiterate: the baseline is model 1 those hyperparameters set to 0, making it unimodal. 
+
+| Hemisphere | Train, Alex/COCO | Train, Alex | Test, Alex/COCO | Test, Alex |
+|------------|-----------------:|------------:|----------------:|-----------:|
+| Left       | 0.2176           | 0.2059      | 0.1959          | 0.1957     |
+| Right      | 0.2155           | 0.2046      | 0.1933          | 0.1917     |
 
 Table: Mean Median Voxel Correlation (Model 1).
 
-In __table 2__ we see the mean median voxel correlations for versions of model 2 trained with and without the auxiliary COCO task. TODO: Put in results
 
-| Hemisphere | Train, Alex/COCO | Train, Alex | Val, Alex/COCO | Val, Alex |
-|------------|-----------------:|------------:|---------------:|----------:|
-| Left       | 0.2176           | 0.2059      | 0.1959         | 0.1957    |
-| Right      | 0.2155           | 0.2046      | 0.1933         | 0.1917    |
+In __table 2__ we see the mean median voxel correlations across all subjects and folds of model 2 with (Alex + COCO) and without (Alex) the COCO vector concatenated to the Alex vector.
+
+| Hemisphere | Train, Alex/COCO | Train, Alex | Test, Alex/COCO | Test, Alex |
+|------------|-----------------:|------------:|----------------:|-----------:|
+| Left       | _0.2176_         | 0.2059      | _0.1932_        | 0.1927     |
+| Right      | _0.2155_         | 0.2046      | _0.195_         | 0.1908     |
 
 Table: Mean Median Voxel Correlation (Model 2).
 
@@ -107,22 +106,22 @@ In __table 3__ we see results of the wandb hyper parameter sweep.
 
 | Hemisphere | $\alpha$ correlation | $\alpha$ importance | $\beta$ correlation | $\beta$ importance |
 |------------|---------------------:|--------------------:|--------------------:|-------------------:|
-| Left       | 0.063                | 0.424               | - 0.147             | 0.576              |
-| Right      | 0.076                | 0.566               | - 0.087             | 0.434              |
+| Left       | 0.063                | 0.424               | - 0.147             | 0.576              |
+| Right      | 0.076                | 0.566               | - 0.087             | 0.434              |
 
-Table: Bayesian Hyperparamter Sweep (Model 2).
+Table: Bayesian Hyperparamter Sweep (Model 1).
 
 A mean (across all subjects and folds) median voxel correlation projection onto a common cortical atlas is available interactively at neuroscope.streamlit.app/.
 
-## Discussion
+## Analysis and Discussion
 
 ## Future Work
 
-It appears that the semantic vector modality is not particularly useful for the model. A logical next step would be to experiment with extracting the image representations from different, or multiple AlexNet layers, or using an entirely different model for the image representation extraction. We might also explore using more rich COCO modalities such as image captions and object bounding boxes.
+As seen in the Analysis and Discussion, it appears that the semantic vector modality is not particularly useful for the model. A logical next step would be to experiment with extracting the image representations from different, or multiple AlexNet layers, or using an entirely different model for the image representation extraction. We might also explore using more rich COCO modalities such as image captions and object bounding boxes. Lastly, from a neuroscientific perspective, the ROIs of the brain are considered to be different modalities: they function by vastly different rules. Processing the ROIs separately might allow for models tailoring to specific ROI idiosyncrasies.
 
 ## Conclusion
 
-This study attempts a multimodal approach to creating an encoding model of the visual cortex, to bridge the gap between computational models and the inherent complexity of the human visual system by leveraging a novel multimodal deep learning approach and a large-scale fMRI dataset. By shedding light on the role of different types of features in predicting fMRI responses, this research could significantly contribute to our understanding of visual perception and its underlying neural correlates. Furthermore, the proposed model could
+
 
 ## References
 
