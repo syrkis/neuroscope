@@ -104,6 +104,5 @@ def plot_brain(challenge_vec, subject, hem, roi=None):
         cmap="twilight_shifted",
         colorbar=True,
         title=title,
-        black_bg=True,
     )
-    return view.resize(height=800, width=1200)
+    return view.resize(height=400, width=1200)

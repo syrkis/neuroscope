@@ -13,7 +13,7 @@ import pickle
 from sklearn.linear_model import LinearRegression
 from functools import partial
 from src.model import mse, bce, soft_f1, focal_loss
-from src.model import apple_network_fn as network_fn
+from src.model import network_fn
 
 
 def pearsonr(x, y):
