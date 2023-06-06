@@ -25,6 +25,7 @@ pycocotools = "^2.0.6"
 flax = "^0.6.10"
 torch = "^2.0.1"
 torchvision = "^0.15.2"
+streamlit = "^1.23.1"
 
 
 [build-system]
