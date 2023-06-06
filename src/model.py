@@ -10,42 +10,16 @@ from functools import partial
 
 
 # functions
-def mango_network_fn(imgcat, config, training=True):  # this now needs a conf (use partial)
-    """network function"""
-    n_units = config.n_units
-    n_layers = config.n_layers
-    latent_dim = config.latent_dim
-    lh_size = 19004
-    rh_size = 20544
-    imgcat_mlp = hk.Sequential([
-        hk.nets.MLP([n_units] * n_layers, activation=jnp.tanh),
-        hk.Linear(latent_dim),
-    ])
-    lh_mlp = hk.Sequential([
-        hk.nets.MLP([n_units] * 1, activation=jnp.tanh),
-        hk.Linear(lh_size),
-    ])
-    rh_mlp = hk.Sequential([
-        hk.nets.MLP([n_units] * 1, activation=jnp.tanh),
-        hk.Linear(rh_size),
-    ])
-    imgcat = hk.dropout(hk.next_rng_key(), config.dropout, imgcat) if training else imgcat
-    z = imgcat_mlp(imgcat)  # get latent representation
-    z = hk.dropout(hk.next_rng_key(), config.dropout, z) if training else z
-    lh = lh_mlp(z)    # get left hemisphere prediction
-    rh = rh_mlp(z)    # get right hemisphere prediction
-    return lh, rh
-
-def apple_network_fn(img, config, training=True):  # this now needs a conf (use partial)
+def network_fn(img, config, training=True):  # this now needs a conf (use partial)
     """network function"""
     # TODO: add dropout if training
-    n_units = config.n_units
-    n_layers = config.n_layers
-    latent_dim = config.latent_dim
+    n_units = config['n_units']    # this break train.py since config is not normal dict with sweep
+    n_layers = config['n_layers']
+    latent_dim = config['latent_dim']
+    dropout = config['dropout']
     cat_size = 80
     lh_size = 19004
     rh_size = 20544
-    dropout = config.dropout
     img_mlp = hk.Sequential([
         hk.nets.MLP([n_units] * n_layers, activation=jnp.tanh),
         hk.Linear(latent_dim),

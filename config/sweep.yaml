@@ -21,7 +21,7 @@ parameters:
   dropout:
     value: 0.1
   n_steps:
-    value: 8000
+    value: 5000
   latent_dim:
     value: 100
   k_folds:
