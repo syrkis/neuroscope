@@ -66,7 +66,7 @@ All hidden layers used the tanh activation function, dropout of 0.1, and weight 
 The primary model (with the auxiliary task of predicting $y_c$ during training), had two experiment-specific hyperparameters, $\alpha$ and $\beta$, weighing $y_c$ and whatever hemisphere was not being optimized for respectively in the loss function. The model used mean squared error for optimizing the fMRI predictions and binary soft f1 loss for $y_c$ due to a heavy imbalance between categories. Using regular binary cross entropy would yield a low loss by guessing all zeros, as most images contain only a few categories.
 
 ### Experiments
-  
+
 #### Incorporating Category Vector Modality and Semantic Vector Representation
 
 To unlock the potential utility of the semantic vector, we designed our experiment with a multimodal approach. This involved integrating the category vector modality (model 2) by concatenating it with the image vector derived from AlexNet, an auxiliary task to predict the category during training (model 1), and tuning the $\alpha$ and $\beta$ parameters weighting the importance of the auxiliary tasks in the loss function. Additional motivation for the inclusion of the auxiliary modalities is the potential avoidance of overfitting; finding inappropriate shortcuts in the data becomes more difficult if the shortcuts also have to make sense of the semantic vector.
@@ -86,17 +86,29 @@ To search for the optimal values of $\alpha$ and $beta$, we initiated a wandb sw
 ## Results
 
 
-In __table 1__ we see the mean median voxel correlations for versions of model 1 (the primary model with auxiliary task) trained with and without $\alpha$ and $\beta$ set to 0. To reiterate: the baseline is model 1 those hyperparameters set to 0, making it unimodal. 
+In __table 1__ we see the mean median voxel correlations for the two hemisphere versions of model 1 (the primary model with the auxiliary task) trained with and without $\alpha$ and $\beta$ set to 0. The none baseline has $\alpha = 0.5$ and $\beta = 0.25$. __Table 1__ shows us that our multimodal baseline outperforms the baseline on the test data. Further analysis would however be needed to explore the significance hereof. We also see that the _baseline_ performs better on the train data. The baseline is thus, everything else being equal, overfitting more than its multimodal counterpart. This could be an indication that our semantic vector does indeed have a regularising effect.
+
+With learned from the hyperparameter search described in __table 2__ and __appendix A__ and __appendix B__, we set $\alpha$ and $\beta$ to 0.05 and 0.25 respectively.
+
 
 | Hemisphere | Train, Alex/COCO | Train, Alex | Test, Alex/COCO | Test, Alex |
 |------------|-----------------:|------------:|----------------:|-----------:|
-| Left       | 0.2176           | 0.2059      | 0.1959          | 0.1957     |
-| Right      | 0.2155           | 0.2046      | 0.1933          | 0.1917     |
+| Left       | 0.2558           | _0.2676_    | _0.1869_        | 0.1812     |
+| Right      | 0.255            | _0.265_     | _0.1881_        | 0.1782     |
 
 Table: Mean Median Voxel Correlation (Model 1).
 
+In __table 2__ we see the correlation between $\alpha$ and $\beta$ the median correlation performance metrics. These correlations are based on a total of 60 runs across the five folds for each of the six subjects. The correlations are low, indicating that the usefulness of predicting the semantic vector as an auxiliary task, is at best subtle and at worst spurious. Again more elaborate statical analysis would be needed.
 
-In __table 2__ we see the mean median voxel correlations across all subjects and folds of model 2 with (Alex + COCO) and without (Alex) the COCO vector concatenated to the Alex vector.
+| Hemisphere | $\alpha$ correlation | $\beta$ correlation |
+|------------|---------------------:|--------------------:|
+| Left       | 0.063                | - 0.147             |
+| Right      | 0.076                | - 0.087             |
+
+Table: Bayesian Hyperparameter Sweep (Model 1).
+
+
+In __table 3__ we see the mean median voxel correlations across all subjects and folds of model 2 with (Alex + COCO) and without (Alex) the COCO vector concatenated to the Alex vector. We see a similarly subtle advantage to including the second modality here. The reader should again note that the metrics here displayed are mean _median_ correlations.
 
 | Hemisphere | Train, Alex/COCO | Train, Alex | Test, Alex/COCO | Test, Alex |
 |------------|-----------------:|------------:|----------------:|-----------:|
@@ -104,16 +116,6 @@ In __table 2__ we see the mean median voxel correlations across all subjects and
 | Right      | _0.2155_         | 0.2046      | _0.195_         | 0.1908     |
 
 Table: Mean Median Voxel Correlation (Model 2).
-
-
-In __table 3__ we see results of the wandb hyper parameter sweep. 
-
-| Hemisphere | $\alpha$ correlation | $\alpha$ importance | $\beta$ correlation | $\beta$ importance |
-|------------|---------------------:|--------------------:|--------------------:|-------------------:|
-| Left       | 0.063                | 0.424               | - 0.147             | 0.576              |
-| Right      | 0.076                | 0.566               | - 0.087             | 0.434              |
-
-Table: Bayesian Hyperparamter Sweep (Model 1).
 
 A mean (across all subjects and folds) median voxel correlation projection onto a common cortical atlas is available interactively at neuroscope.streamlit.app/.
 
@@ -125,10 +127,148 @@ As seen in the Analysis and Discussion, it appears that the semantic vector moda
 
 ## Conclusion
 
-
+It appears that including the semantic vector, and creating a multimodal model increases performance slightly, though the significance of the increase merits further study.
 
 ## References
 
 <div id="refs"></div>
 
+\pagebreak
+
 ## Appendix
+
+### Appendix A
+
+|Name                |alpha                 |beta                | __val_lh_corr__       |val_rh_corr        |
+|-------------------------------:|---------------------:|-------------------:|------------------:|------------------:|
+|giddy-sweep-48      |0.031                 |0.347               |0.245              |0.251              |
+|avid-sweep-12       |0.051                 |0.223               |0.245              |0.23               |
+|woven-sweep-13      |0.046                 |0.082               |0.242              |0.215              |
+|solar-sweep-11      |0.076                 |0.167               |0.24               |0.226              |
+|leafy-sweep-18      |0.025                 |0.36                |0.235              |0.253              |
+|dainty-sweep-44     |0.044                 |0.018               |0.229              |0.224              |
+|effortless-sweep-47 |0.033                 |0.042               |0.228              |0.209              |
+|fresh-sweep-17      |0.034                 |0.072               |0.225              |0.177              |
+|silvery-sweep-41    |0.096                 |0.218               |0.225              |0.225              |
+|fresh-sweep-50      |0.014                 |0.211               |0.224              |0.209              |
+|generous-sweep-5    |0.072                 |0.294               |0.22               |0.22               |
+|autumn-sweep-16     |0.026                 |0.469               |0.218              |0.218              |
+|crimson-sweep-15    |0.08                  |0.41                |0.215              |0.202              |
+|skilled-sweep-45    |0.049                 |0.186               |0.215              |0.201              |
+|sandy-sweep-4       |0.057                 |0.473               |0.214              |0.177              |
+|fearless-sweep-7    |0.031                 |0.398               |0.213              |0.212              |
+|fanciful-sweep-20   |0.042                 |0.429               |0.212              |0.22               |
+|sunny-sweep-14      |0.029                 |0.353               |0.211              |0.2                |
+|genial-sweep-8      |0.07                  |0.488               |0.211              |0.195              |
+|colorful-sweep-43   |0.017                 |0.158               |0.206              |0.186              |
+|hardy-sweep-57      |0.007                 |0.126               |0.202              |0.198              |
+|glamorous-sweep-42  |0.025                 |0.201               |0.201              |0.185              |
+|dark-sweep-2        |0.012                 |0.391               |0.196              |0.18               |
+|likely-sweep-46     |0.056                 |0.067               |0.194              |0.184              |
+|pleasant-sweep-51   |0.051                 |0.004               |0.193              |0.171              |
+|pious-sweep-31      |0.065                 |0.347               |0.19               |0.223              |
+|cool-sweep-19       |0.027                 |0.152               |0.19               |0.223              |
+|hearty-sweep-1      |0.073                 |0.045               |0.189              |0.166              |
+|resilient-sweep-60  |0.049                 |0.061               |0.184              |0.175              |
+|super-sweep-10      |0.015                 |0.437               |0.183              |0.176              |
+|bright-sweep-34     |0.065                 |0.066               |0.181              |0.203              |
+|light-sweep-23      |0.092                 |0.191               |0.177              |0.165              |
+|firm-sweep-28       |0.044                 |0.117               |0.177              |0.172              |
+|volcanic-sweep-49   |0.0                   |0.412               |0.174              |0.179              |
+|breezy-sweep-6      |0.054                 |0.451               |0.173              |0.165              |
+|tough-sweep-22      |0.027                 |0.058               |0.173              |0.149              |
+|icy-sweep-9         |0.085                 |0.373               |0.173              |0.157              |
+|distinctive-sweep-30|0.083                 |0.084               |0.168              |0.166              |
+|decent-sweep-58     |0.09                  |0.499               |0.159              |0.148              |
+|true-sweep-3        |0.042                 |0.354               |0.157              |0.144              |
+|firm-sweep-59       |0.025                 |0.31                |0.155              |0.155              |
+|sweepy-sweep-56     |0.075                 |0.27                |0.153              |0.112              |
+|clean-sweep-27      |0.021                 |0.179               |0.151              |0.126              |
+|fallen-sweep-35     |0.042                 |0.078               |0.147              |0.163              |
+|celestial-sweep-36  |0.088                 |0.244               |0.146              |0.146              |
+|golden-sweep-55     |0.015                 |0.396               |0.146              |0.131              |
+|splendid-sweep-53   |0.048                 |0.07                |0.143              |0.149              |
+|efficient-sweep-26  |0.02                  |0.387               |0.143              |0.135              |
+|fiery-sweep-54      |0.04                  |0.442               |0.138              |0.139              |
+|firm-sweep-37       |0.056                 |0.275               |0.136              |0.131              |
+|rosy-sweep-38       |0.049                 |0.395               |0.134              |0.148              |
+|wandering-sweep-32  |0.025                 |0.249               |0.132              |0.149              |
+|twilight-sweep-40   |0.035                 |0.089               |0.127              |0.132              |
+|glorious-sweep-33   |0.021                 |0.422               |0.126              |0.135              |
+|dainty-sweep-52     |0.008                 |0.283               |0.124              |0.108              |
+|peach-sweep-25      |0.029                 |0.401               |0.115              |0.116              |
+|devoted-sweep-21    |0.093                 |0.412               |0.11               |0.1                |
+|true-sweep-24       |0.04                  |0.259               |0.107              |0.111              |
+|fancy-sweep-39      |0.004                 |0.083               |0.106              |0.105              |
+|radiant-sweep-29    |0.061                 |0.427               |0.104              |0.106              |
+
+Table: lh sweep log (sorted by lh corr).
+
+
+
+### Appendix B
+
+|Name                |alpha                 |beta                |val_lh_corr        | __val_rh_corr__        |
+|---------------------------:|---------------------:|-------------------:|------------------:|------------------:|
+|wobbly-sweep-19     |0.059                 |0.234               |0.273              |0.28               |
+|generous-sweep-49   |0.089                 |0.045               |0.234              |0.237              |
+|deep-sweep-9        |0.067                 |0.083               |0.216              |0.228              |
+|treasured-sweep-16  |0.088                 |0.379               |0.221              |0.228              |
+|quiet-sweep-11      |0.014                 |0.18                |0.225              |0.224              |
+|radiant-sweep-50    |0.003                 |0.429               |0.236              |0.223              |
+|splendid-sweep-7    |0.07                  |0.464               |0.236              |0.223              |
+|fallen-sweep-48     |0.057                 |0.486               |0.243              |0.222              |
+|genial-sweep-42     |0.038                 |0.037               |0.226              |0.221              |
+|misty-sweep-14      |0.053                 |0.224               |0.227              |0.22               |
+|rosy-sweep-17       |0.084                 |0.155               |0.215              |0.219              |
+|sweepy-sweep-34     |0.078                 |0.333               |0.193              |0.218              |
+|ancient-sweep-18    |0.007                 |0.011               |0.22               |0.216              |
+|major-sweep-45      |0.068                 |0.452               |0.223              |0.215              |
+|peach-sweep-12      |0.072                 |0.292               |0.222              |0.209              |
+|winter-sweep-47     |0.018                 |0.198               |0.211              |0.207              |
+|warm-sweep-25       |0.052                 |0.326               |0.203              |0.206              |
+|chocolate-sweep-46  |0.01                  |0.103               |0.202              |0.205              |
+|crisp-sweep-20      |0.095                 |0.02                |0.19               |0.203              |
+|effortless-sweep-44 |0.03                  |0.33                |0.236              |0.201              |
+|warm-sweep-41       |0.084                 |0.058               |0.212              |0.198              |
+|deep-sweep-10       |0.02                  |0.331               |0.21               |0.196              |
+|kind-sweep-4        |0.028                 |0.317               |0.207              |0.19               |
+|hearty-sweep-60     |0.057                 |0.383               |0.192              |0.186              |
+|solar-sweep-1       |0.034                 |0.302               |0.192              |0.186              |
+|absurd-sweep-43     |0.003                 |0.129               |0.206              |0.186              |
+|dry-sweep-58        |0.064                 |0.475               |0.169              |0.186              |
+|drawn-sweep-6       |0.028                 |0.346               |0.184              |0.185              |
+|decent-sweep-35     |0.097                 |0.225               |0.167              |0.184              |
+|worldly-sweep-5     |0.042                 |0.396               |0.172              |0.183              |
+|kind-sweep-54       |0.08                  |0.405               |0.175              |0.182              |
+|olive-sweep-31      |0.022                 |0.222               |0.158              |0.181              |
+|sparkling-sweep-3   |0.033                 |0.306               |0.194              |0.18               |
+|cosmic-sweep-37     |0.079                 |0.143               |0.155              |0.177              |
+|light-sweep-13      |0.058                 |0.253               |0.204              |0.177              |
+|devoted-sweep-57    |0.08                  |0.167               |0.177              |0.175              |
+|proud-sweep-8       |0.025                 |0.436               |0.197              |0.174              |
+|rural-sweep-53      |0.016                 |0.423               |0.192              |0.173              |
+|earnest-sweep-2     |0.071                 |0.16                |0.178              |0.172              |
+|visionary-sweep-36  |0.075                 |0.223               |0.16               |0.171              |
+|floral-sweep-30     |0.075                 |0.433               |0.169              |0.165              |
+|super-sweep-38      |0.048                 |0.035               |0.155              |0.165              |
+|astral-sweep-28     |0.044                 |0.285               |0.168              |0.163              |
+|neat-sweep-33       |0.026                 |0.006               |0.16               |0.162              |
+|jolly-sweep-40      |0.067                 |0.213               |0.15               |0.162              |
+|firm-sweep-59       |0.002                 |0.3                 |0.15               |0.16               |
+|cerulean-sweep-15   |0.055                 |0.489               |0.162              |0.159              |
+|lilac-sweep-27      |0.007                 |0.472               |0.177              |0.157              |
+|glad-sweep-56       |0.085                 |0.451               |0.16               |0.156              |
+|dandy-sweep-32      |0.089                 |0.048               |0.138              |0.151              |
+|glad-sweep-52       |0.06                  |0.463               |0.156              |0.149              |
+|valiant-sweep-22    |0.04                  |0.096               |0.13               |0.143              |
+|cerulean-sweep-51   |0.065                 |0.208               |0.142              |0.143              |
+|still-sweep-39      |0.046                 |0.062               |0.125              |0.142              |
+|smart-sweep-23      |0.023                 |0.036               |0.132              |0.139              |
+|youthful-sweep-55   |0.009                 |0.249               |0.134              |0.138              |
+|fresh-sweep-29      |0.02                  |0.416               |0.108              |0.129              |
+|driven-sweep-26     |0.079                 |0.167               |0.133              |0.125              |
+|autumn-sweep-24     |0.079                 |0.484               |0.125              |0.109              |
+|skilled-sweep-21    |0.041                 |0.338               |0.069              |0.086              |
+
+Table: rh sweep log (sorted by rh corr).
