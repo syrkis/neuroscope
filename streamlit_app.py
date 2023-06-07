@@ -6,14 +6,21 @@
 import os
 import numpy as np
 import streamlit.components.v1 as components
+from nilearn import plotting, datasets
+import pandas as pd
 from tqdm import tqdm
 from src.utils import DATA_DIR, SUBJECTS
+from src.fmri import fsaverage_vec
+
+
+# load atlas fsaverage
 
 
 
-def plot_brain(challenge_vec, subject, hem, roi=None):
+
+def plot_brain(atlas, vec, subject, hem, roi=None):
     """plot a vector on the brain"""
-    surface = fsaverage_vec(challenge_vec, subject, roi)
+    surface = fsaverage_vec(vec, subject, roi)
     direction = "left" if hem == "lh" else "right"
     title = direction + " hemisphere, " + "subject " + subject[-1]
     title = title + ", " + roi if roi else title
@@ -31,4 +38,12 @@ def plot_brain(challenge_vec, subject, hem, roi=None):
     components.html(view_html, height=800, width=1200)
 
 # call plot_brain
-plot_brain(challenge_vec, subject, hem, roi=None)
+
+def main():
+    atlas = datasets.fetch_atlas_fsaverage()
+    corrs = pd.read_csv(os.path.join("corrs.csv"))
+    lh_vec = corrs[SUBJECTS[0]]['lh']
+    plot_brain(atlas, lh_vec, 'subj01' "lh")
+
+if __name__ == "__main__":
+    main()
