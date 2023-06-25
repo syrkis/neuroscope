@@ -72,6 +72,6 @@ def get_subject_data(imgs, args, meta_data, img_files, subject, idxs):
     cats = meta_data.iloc[coco_ids]["categories"].values  # category info
     cats = jnp.array([c_to_one_hot(c) for c in cats])  # one-hot encoding
     perm = np.random.permutation(len(img_files))  # randomize order of images
-    return imgs[perm], lh[perm], rh[perm], cats[perm] # supers[perm], captions[perm], fmri[perm]
+    return lh[perm], rh[perm], imgs[perm], cats[perm] # supers[perm], captions[perm], fmri[perm]
     # captions = meta_data.iloc[coco_ids]["captions"].values  # caption info
     # supers = meta_data.iloc[coco_ids]["supercategory"].values  # supercategory info
