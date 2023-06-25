@@ -15,7 +15,7 @@ from typing import List, Tuple, Dict
 from functools import partial
 from tqdm import tqdm
 from src.model import loss_fn_base
-from src.model import apple_network_fn as network_fn
+from src.model import network_fn
 from src.eval import evaluate, algonauts_baseline
 
 
