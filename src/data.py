@@ -27,7 +27,7 @@ def load_data(args):
         # images = jnp.array(np.load(f"data/{subject}/training_split/alexnet_pca.npy"))
         # is subject_images.npy does not exist, create it
         if not os.path.exists(f"data/{subject}_images.npy"):
-            images = np.array([preprocess(Image.open(f), 224) for f in tqdm(img_files)])
+            images = np.array([preprocess(Image.open(f), 128) for f in tqdm(img_files)])
             np.save(f"data/{subject}_images.npy", images)
         else:
             images = np.load(f"data/{subject}_images.npy")
