@@ -8,24 +8,29 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+import numpy as np
+import os
 from src.utils import get_files
 from src.fmri import fmri_data  # NOTE: This is the only import from fmri.py
 from src.coco import preprocess, get_meta_data, c_to_one_hot
 
 
 # batch_loader
-def get_data(args): 
+def load_data(args): 
     """return dictionary of data loaders for each subject"""
-    data = {subject: None for subject in args.subjects.split(",")}
     meta_data = get_meta_data()
+    data = {subject: None for subject in args.subjects.split(",")}
 
     for subject in tqdm(args.subjects.split(",")):
         """return a test data loader, and a k-fold cross validation generator"""
         img_files = [f for f in get_files(subject) if f.endswith(".png")]
-        # img_files = img_files[:config['n_samples']] if config['n_samples'] else img_files
-        images = jnp.array(np.load(f"data/{subject}/training_split/alexnet_pca.npy"))
-        # else:  # use raw images
-        #    images = jnp.array([preprocess(Image.open(f), config['image_size']) for f in tqdm(img_files)])
+        # images = jnp.array(np.load(f"data/{subject}/training_split/alexnet_pca.npy"))
+        # is subject_images.npy does not exist, create it
+        if not os.path.exists(f"data/{subject}_images.npy"):
+            images = np.array([preprocess(Image.open(f), 224) for f in tqdm(img_files)])
+            np.save(f"data/{subject}_images.npy", images)
+        else:
+            images = np.load(f"data/{subject}_images.npy")
 
         train_idxs, test_idxs = map(jnp.array, train_test_split(range(len(img_files)), test_size=0.1, random_state=42))
         train_img_files = [img_files[idx] for idx in train_idxs.tolist()]
@@ -33,8 +38,8 @@ def get_data(args):
 
         test_img_files = [img_files[idx] for idx in test_idxs.tolist()]
         test_data = get_subject_data(images[test_idxs], args, meta_data, test_img_files, subject, test_idxs)
-
-        data[subject] = (folds, test_data)
+        subject_data = {"test": test_data, "folds": folds}
+        data[subject] = subject_data
     return data
 
 

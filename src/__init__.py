@@ -1,5 +1,4 @@
 from src.utils import get_args_and_config, get_files, plot_metrics
-from src.data import get_data
 from src.fmri import plot_brain
 
 
