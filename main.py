@@ -1,35 +1,25 @@
-"""main file for neuroscope project"""""
 # main.py
 #   neuroscope project
 # by: Noah Syrkis
 
+
 # imports
-import wandb
-from multiprocessing import Pool
-from src.utils import get_args_and_config
-from src.data import get_data
-from src.train import sweep
-# from src.eval import test
+from tqdm import tqdm
+from src.data import load_subject, make_kfolds
 
 
 def main():
-    """main function"""
-    args, config = get_args_and_config()
-
-    if args.sweep:
-        data = get_data(args)
-        sweep(data, config)
-
-    if args.train:
-        data = get_data(args)
-        # train(data, params)
-
-    if args.test:
-        data = get_data(args)
-        test_data = {s: d for s, (_, d) in data.items()}
-        # test(test_data, config)
+    subject = load_subject('subj05', 128)
+    config = {'batch_size': 32, 'image_size': 128, 'n_splits': 5}
+    kfolds = make_kfolds(subject, config)
+    tmps = []
+    for train_loader, _ in kfolds:
+        for i in tqdm(range(1000)):
+            a, b, c = next(train_loader)
+            tmps.append(a)
 
 
 # run main()
 if __name__ == "__main__":
     main()
+
