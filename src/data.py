@@ -84,7 +84,7 @@ def make_batches(lh_fmri, rh_fmri, images, batch_size):
             batch_perm = perm[i:i + batch_size]
             lh_batch = lh_fmri[batch_perm]
             rh_batch = rh_fmri[batch_perm]
-            image_batch = [images[i] for i in batch_perm]
+            image_batch = images[batch_perm]
             yield lh_batch, rh_batch, image_batch
 
 
