@@ -1,7 +1,7 @@
-"""utility functions for neuroscope project"""""
 # utils.py
 #   neuroscope project
 # by: Noah Syrkis
+
 
 # imports
 import os
@@ -17,6 +17,14 @@ from matplotlib import pyplot as plt
 import yaml
 
 
+# CONFIG
+def get_config(filename='config.yaml'):
+    with open(filename, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+CONFIG = get_config()
+
 # PATHS
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath('__file__')), 'data')
 INSTANCES_DIR = os.path.join(DATA_DIR, 'coco', 'annotations', 'instances_train2017.json')
@@ -26,12 +34,12 @@ CAPTIONS_DIR = os.path.join(DATA_DIR, 'coco', 'annotations', 'captions_train2017
 # CONSTANTS
 SUBJECTS = ['subj05', 'subj06', 'subj07', 'subj08']
 
-CLASS_TO_ROI = {"prf-visualrois": ["V1v", "V1d", "V2v", "V2d", "V3v", "V3d", "hV4"],
+CLASS_TO_ROI = {"prf-visualrois":  ["V1v", "V1d", "V2v", "V2d", "V3v", "V3d", "hV4"],
                     "floc-bodies": ["EBA", "FBA-1", "FBA-2", "mTL-bodies"],
-                    "floc-faces": ["OFA", "FFA-1", "FFA-2", "mTL-faces", "aTL-faces"],
+                    "floc-faces":  ["OFA", "FFA-1", "FFA-2", "mTL-faces", "aTL-faces"],
                     "floc-places": ["OPA", "PPA", "RSC"],
-                    "floc-words": ["OWFA", "VWFA-1", "VWFA-2", "mfs-words", "mTL-words"],
-                    "streams": ["early", "midventral", "midlateral", "midparietal", "ventral", "lateral", "parietal"]}
+                    "floc-words":  ["OWFA", "VWFA-1", "VWFA-2", "mfs-words", "mTL-words"],
+                    "streams":     ["early", "midventral", "midlateral", "midparietal", "ventral", "lateral", "parietal"]}
 
 ROI_TO_CLASS = {roi: roi_class for roi_class, rois in CLASS_TO_ROI.items() for roi in rois}
 
@@ -71,5 +79,4 @@ def load_roi_data(subject):
         for roi_class in CLASS_TO_ROI.keys():
             data['challenge'][hem][roi_class] = np.load(os.path.join(roi_dir, f'{hem}.{roi_class}_challenge_space.npy'))
             data['fsaverage'][hem][roi_class] = np.load(os.path.join(roi_dir, f'{hem}.{roi_class}_fsaverage_space.npy'))
-
     return data

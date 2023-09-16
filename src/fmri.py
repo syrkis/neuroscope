@@ -41,6 +41,3 @@ def fsaverage_vec(challenge_vec, subject, roi, hem) -> np.ndarray:
         fsaverage_response = np.zeros(len(fsaverage_space))
         fsaverage_response[np.where(fsaverage_space)[0]] = challenge_vec
     return fsaverage_response
-
-
-

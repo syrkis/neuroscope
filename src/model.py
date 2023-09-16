@@ -6,28 +6,30 @@
 import jax
 from jax import numpy as jnp
 import haiku as hk
+from typing import Optional
 from functools import partial
 from typing import Optional
+from src.utils import CONFIG
 
 
 # Define your function
-def network_fn(fmri: jnp.ndarray, key: Optional[jnp.ndarray] = None,  dropout_rate: Optional[float] = None, image_size: int = 32) -> jnp.ndarray:
+def network_fn(fmri: jnp.ndarray,  dropout_rate: Optional[float] = None) -> jnp.ndarray:
     layers = [hk.Linear(300), jax.nn.relu,
               hk.Linear(100), jax.nn.relu]
 
     fmri = hk.Sequential(layers)(fmri)
 
-    if key is not None and dropout_rate is not None:
-        fmri = hk.dropout(key, dropout_rate, fmri)
+    if dropout_rate is not None:
+        rng = hk.next_rng_key()
+        fmri = hk.dropout(rng, dropout_rate, fmri)
 
-    fmri = hk.Linear(image_size*image_size*3)(fmri)
-    fmri = fmri.reshape(-1, image_size, image_size, 3)
+    fmri = hk.Linear(CONFIG['image_size'] * CONFIG['image_size'] * 3)(fmri)
+    fmri = fmri.reshape(-1, CONFIG['image_size'], CONFIG['image_size'], 3)
     return fmri
 
 
-def loss_fn(params: hk.Params, rng: jnp.ndarray, fmri: jnp.ndarray, img: jnp.ndarray) -> jnp.ndarray:
-    rng, key = jax.random.split(rng)
-    pred = apply(params, rng, fmri, key=key, dropout_rate=0.5)
+def loss_fn(params: hk.Params, rng: jnp.ndarray, fmri: jnp.ndarray, img: jnp.ndarray, dropout_rate: Optional[float] = None) -> jnp.ndarray:
+    pred = apply(params, rng, fmri, dropout_rate=dropout_rate)
     loss = jnp.mean((pred - img) ** 2)
     return loss
 
