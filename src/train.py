@@ -20,9 +20,9 @@ from src.plots import plot_small_multiples_html
 # functions
 def hyperparam_fn():  # TODO: perhaps have hyperparam ranges be in config.yaml
     return {
-        'batch_size': np.random.choice([32, 64]),
-        'n_steps': np.random.randint(low=100, high=200),
-        'dropout_rate': np.random.uniform(low=0.1, high=0.5),
+        'batch_size': 32,
+        'n_steps': 10000,
+        'dropout_rate': 0.5
     }
 
 def update_fn(params, rng, fmri, img, opt_state, opt, dropout_rate):
@@ -69,7 +69,7 @@ def evaluate(params, rng, train_loader, val_loader, n_steps=2):
 def train_folds(kfolds, hyperparams, seed=0):
     metrics = {}
     rng = jax.random.PRNGKey(seed)
-    opt = optax.lion(1e-3)
+    opt = optax.adamw(learning_rate=1e-3)
     plot_batch = None
     for idx, (train_loader, val_loader) in enumerate(kfolds):
         plot_batch = next(train_loader) if plot_batch is None else plot_batch

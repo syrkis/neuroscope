@@ -14,13 +14,24 @@ from src.utils import CONFIG
 
 # Define your function
 def network_fn(fmri: jnp.ndarray,  dropout_rate: Optional[float] = None) -> jnp.ndarray:
-    fc = [hk.Linear(128), jax.nn.gelu,
-              hk.Linear(256), jax.nn.gelu,
-              hk.Linear(256), jax.nn.gelu,
-              hk.Linear(CONFIG['image_size'] * CONFIG['image_size'] * 3)]
+    fc_layer = [
+        hk.Linear(512), jax.nn.gelu,
+        hk.Linear(512), jax.nn.gelu,
+        hk.Linear(CONFIG['image_size'] * CONFIG['image_size'] * 3)
+        ]
+
+    conv_layer = [
+        hk.Conv2D(64, kernel_shape=3, stride=1, padding='SAME'), jax.nn.gelu,
+        hk.Conv2D(32, kernel_shape=3, stride=1, padding='SAME'), jax.nn.gelu,
+        hk.Conv2D(32, kernel_shape=3, stride=1, padding='SAME'), jax.nn.gelu,
+        hk.Conv2D(32, kernel_shape=3, stride=1, padding='SAME'), jax.nn.gelu,
+        hk.Conv2D(16, kernel_shape=3, stride=1, padding='SAME'), jax.nn.gelu,
+        hk.Conv2D(8, kernel_shape=3, stride=1, padding='SAME'), jax.nn.gelu,
+        hk.Conv2D(3, kernel_shape=3, stride=1, padding='SAME'), jax.nn.gelu,
+    ]
 
     # apply fc and reshape to image
-    z = hk.Sequential(fc)(fmri)
+    z = hk.Sequential(fc_layer)(fmri)
 
     # apply dropout if training
     if dropout_rate is not None:
@@ -29,15 +40,7 @@ def network_fn(fmri: jnp.ndarray,  dropout_rate: Optional[float] = None) -> jnp.
 
     # reshape to image
     z = z.reshape(-1, CONFIG['image_size'], CONFIG['image_size'], 3)
-
-    # deconv (transpose conv) layers
-    deconv = [hk.Conv2DTranspose(output_channels=21, kernel_shape=3, stride=2, padding='SAME'), jax.nn.gelu,
-              hk.Conv2DTranspose(output_channels=64, kernel_shape=3, stride=2, padding='SAME'), jax.nn.gelu,
-              hk.Conv2DTranspose(output_channels=32, kernel_shape=3, stride=2, padding='SAME'), jax.nn.gelu,
-              hk.Conv2DTranspose(output_channels=3, kernel_shape=3, stride=2, padding='SAME')]
-
-    # apply deconv
-    z = hk.Sequential(deconv)(z)
+    z = hk.Sequential(conv_layer)(z)
     z = jax.nn.sigmoid(z)
     return z
 
