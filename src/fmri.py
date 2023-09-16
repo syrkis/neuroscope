@@ -5,7 +5,7 @@
 # imports
 import os
 import numpy as np
-from nilearn import datasets, plotting
+from nilearn import datasets
 from src.utils import SUBJECTS, ROI_TO_CLASS, load_roi_data
 
 
