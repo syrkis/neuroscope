@@ -27,14 +27,14 @@ plt.style.use("dark_background")
 env = Environment(loader=FileSystemLoader('templates'))
 
 
-def plot_small_multiples_html(pred_batch, target_batch, n_cols=3):
+def plot_small_multiples_html(pred_batch, target_batch, metrics, hyperparams, n_cols=3):
     pred_batch, target_batch = np.array(pred_batch[: n_cols ** 2]), np.array(target_batch[: n_cols ** 2])
     batch = np.zeros_like(pred_batch)
     batch[:, :, : CONFIG['image_size'] // 2, :] = pred_batch[:, :, : CONFIG['image_size'] // 2, :]
     batch[:, :, CONFIG['image_size'] // 2 :, :] = target_batch[:, :, CONFIG['image_size'] // 2 :, :]
     images = [ matrix_to_image(pred) for pred in batch ]
     template = env.get_template('images.html')
-    html = template.render(images=images)
+    html = template.render(images=images, metrics=metrics, hyperparams=hyperparams)
     clear_output(wait=True)
     display(HTML(html))
 

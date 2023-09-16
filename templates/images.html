@@ -1,6 +1,74 @@
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; width: 1200px; height: 1200px; margin: 0; background-color: black; padding: 60px;">
-    {% for image in images %}
-    <div style="display: flex; justify-content: center; align-items: center; background-image: url('data:image/png;base64,{{image}}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        html, body {
+            font-family: serif;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+        }
+        .metrics {
+            /* all she be in one line */
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+        .images {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 60px;
+            width: 1200px;
+            height: 1200px;
+            margin: 0;
+            background-color: black;
+            padding: 60px;
+        }
+        .image {
+            display: flex;
+            justify-content: center;
+            align-items: center; 
+        }
+        ul {
+            /* all she be in one line */
+            margin: auto;
+            display: flex;
+            flex-direction: row;
+            margin: 0;
+            padding: 0;
+        }
+
+        li {
+            list-style-type: none;
+            margin-right: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="metrics">
+            <ul>
+                <li> train_loss: {{ metrics.train_loss }} </li>
+                <li> val_loss: {{ metrics.val_loss }} </li>
+                <li> n_steps: {{ hyperparams.n_steps }} </li>
+                <li> batch_size: {{ hyperparams.batch_size }} </li>
+                <li> dropout: {{ hyperparams.dropout_rate }} </li>
+            </ul>
+        </div>
+        <div class="images">
+            {% for image in images %}
+            <div class='image'>
+                <img src="data:image/png;base64,{{image}}" alt="image" width="100%" height="100%">
+            </div>
+            {% endfor %}
+        </div>
     </div>
-    {% endfor %}
-</div>
+</body>
+</html>

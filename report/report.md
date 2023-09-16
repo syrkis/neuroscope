@@ -1,13 +1,13 @@
 ---
-title: A Multimodel Approach to the Algonauts Challenge
-author: Noah Syrkis & Sophia De Spiegeleire
+title: Decoding the Brain's Visual Encoding System Using Multimodal Deep Learning
+author: Noah Syrkis
 geometry: margin=3cm
 fontsize: 12pt
 date: \today
 ---
 
 ## Abstract
-
+pandoc list_2.md --bibliography=biblio.bib --citeproc -o list_2.pdf
 Understanding how the brain encodes visual information is a key challenge in neuroscience. In this project, we attempt to address this challenge by constructing a multimodal encoding model based on the Algonauts Project 2023 dataset. In addition to the dataset's image modality, we incorporate a semantic feature vector that describes object categories contained in the image shown to the subject during the functional Magnetic Resonance Imaging (fMRI) data collection. We combine various linear modules to construct two models: one predicting the fMRI data from both the associated image and the image's associated semantic feature vector; the other predicting both the fMRI data and the semantic vector from the image alone. Bayesian hyperparameter optimization suggests that the latter approach could potentially enhance model performance during inference without increasing the number of parameters. The model's performance was evaluated using a 5-fold cross-validation strategy and the median Pearson correlation coefficient as the metric. The code for this project is accessible at github.com/syrkis/neuroscope, and training logs are available at wandb.ai/syrkis/neuroscope.
 
 ## Introduction

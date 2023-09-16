@@ -7,7 +7,7 @@ import jax
 from jax import grad, jit
 import jax.numpy as jnp
 import numpy as np
-import yaml
+import wandb
 import haiku as hk
 import optax
 from typing import List, Tuple, Dict
@@ -34,7 +34,7 @@ def update_fn(params, rng, fmri, img, opt_state, opt, dropout_rate):
 
 
 def train_loop(rng, opt, train_loader, val_loader, plot_batch, hyperparams):
-    metrics = []
+    fold_metrics = []
     rng, key = jax.random.split(rng, 2)
     lh, rh, img = next(train_loader)
     params = init(key, lh)
@@ -46,9 +46,10 @@ def train_loop(rng, opt, train_loader, val_loader, plot_batch, hyperparams):
         params, opt_state = update(params, key, lh, img, opt_state)
         if (step % (hyperparams['n_steps'] // 100)) == 0:
             rng, key = jax.random.split(rng)
-            metrics.append(evaluate(params, key, train_loader, val_loader))
+            metrics = evaluate(params, key, train_loader, val_loader)
+            fold_metrics.append(metrics)
             plot_pred = apply(params, key, plot_batch[0])
-            plot_small_multiples_html(plot_pred, plot_batch[2])
+            plot_small_multiples_html(plot_pred, plot_batch[2], metrics, hyperparams)
     return metrics, params
 
 
@@ -63,7 +64,7 @@ def evaluate(params, rng, train_loader, val_loader, n_steps=2):
         val_loss += loss_fn(params, key_val, lh, img)
     train_loss /= n_steps
     val_loss /= n_steps
-    return(f'train_loss: {train_loss}, val_loss: {val_loss}')
+    return {'train_loss': train_loss, 'val_loss': val_loss}
 
 
 def train_folds(kfolds, hyperparams, seed=0):
