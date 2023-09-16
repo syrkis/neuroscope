@@ -48,10 +48,10 @@ def train_loop(rng, opt, train_loader, val_loader, plot_batch, hyperparams):
             metrics.append(evaluate(params, key, train_loader, val_loader))
             # plot_pred = apply(params, key, plot_batch[0])
             # plot_decodings(plot_pred)
-    return metrics
+    return metrics, params
 
 
-def evaluate(params, rng, train_loader, val_loader, n_steps=10):
+def evaluate(params, rng, train_loader, val_loader, n_steps=2):
     # each batch is a tuple(lh, rh, img). Connect n_steps batches into 1
     train_loss, val_loss = 0, 0
     for _ in range(n_steps):
@@ -73,6 +73,6 @@ def train_folds(kfolds, hyperparams, seed=0):
     for idx, (train_loader, val_loader) in enumerate(kfolds):
         plot_batch = next(train_loader) if plot_batch is None else plot_batch
         rng, key = jax.random.split(rng)
-        fold_metrics = train_loop(key, opt, train_loader, val_loader, plot_batch, hyperparams)
+        fold_metrics, fold_params = train_loop(key, opt, train_loader, val_loader, plot_batch, hyperparams)
         metrics[idx] = fold_metrics
-        return metrics
+        return metrics, fold_params

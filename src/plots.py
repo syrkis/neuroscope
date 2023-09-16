@@ -4,12 +4,20 @@
 
 # imports
 import numpy as np
+from IPython.display import display, Image, clear_output
 import matplotlib.pyplot as plt
 import imageio
 import networkx as nx
 from nilearn import plotting
 from tqdm import tqdm
+from IPython.display import display, HTML
+import time
+import numpy as np
+import base64
+from PIL import Image as PILImage
+from io import BytesIO
 from src.fmri import ATLAS, fsaverage_vec
+
 
 
 # globals
@@ -36,9 +44,9 @@ def plot_brain(challenge_vec, subject, hem, roi=None):
     return view.resize(height=900, width=1200)
 
 # plot decodings
-def plot_decoding(decodings, n=4):
+def monitor_decoding(decodings, n=3):
     """small multiple gifs of decodings at differnt stages of training"""
-    decodings = decodings[:n * n]
+    decodings = decodings[: n * n]
     fig, axs = plt.subplots(n, n, figsize=(n * 2, n * 2))
     for i, ax in enumerate(axs.flatten()):
         ax.imshow(decodings[i])

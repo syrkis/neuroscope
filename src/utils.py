@@ -15,6 +15,12 @@ from nilearn import datasets
 import numpy as np
 from matplotlib import pyplot as plt
 import yaml
+from IPython.display import display, HTML
+import time
+import numpy as np
+import base64
+from PIL import Image as PILImage
+from io import BytesIO
 
 
 # CONFIG
@@ -80,3 +86,11 @@ def load_roi_data(subject):
             data['challenge'][hem][roi_class] = np.load(os.path.join(roi_dir, f'{hem}.{roi_class}_challenge_space.npy'))
             data['fsaverage'][hem][roi_class] = np.load(os.path.join(roi_dir, f'{hem}.{roi_class}_fsaverage_space.npy'))
     return data
+
+
+def matrix_to_image(matrix):
+        image = PILImage.fromarray((matrix * 255).astype(np.uint8))
+        image_bytes = BytesIO()
+        image.save(image_bytes, format='png')
+        encoded_image = base64.b64encode(image_bytes.getvalue()).decode('utf-8')
+        return encoded_image
