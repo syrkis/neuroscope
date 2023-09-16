@@ -1,5 +1,0 @@
-model:
-  name: img2fmri
-  config:
-    n_layers: 3
-    layer_size: 128

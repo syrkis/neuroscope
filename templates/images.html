@@ -1,0 +1,6 @@
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; width: 1200px; height: 1200px; margin: 0; background-color: black; padding: 60px;">
+    {% for image in images %}
+    <div style="display: flex; justify-content: center; align-items: center; background-image: url('data:image/png;base64,{{image}}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    </div>
+    {% endfor %}
+</div>

@@ -16,12 +16,27 @@ import numpy as np
 import base64
 from PIL import Image as PILImage
 from io import BytesIO
+from jinja2 import Template, Environment, FileSystemLoader
+from jax import vmap
 from src.fmri import ATLAS, fsaverage_vec
-
+from src.utils import matrix_to_image, CONFIG
 
 
 # globals
 plt.style.use("dark_background")
+env = Environment(loader=FileSystemLoader('templates'))
+
+
+def plot_small_multiples_html(pred_batch, target_batch, n_cols=3):
+    pred_batch, target_batch = np.array(pred_batch[: n_cols ** 2]), np.array(target_batch[: n_cols ** 2])
+    batch = np.zeros_like(pred_batch)
+    batch[:, :, : CONFIG['image_size'] // 2, :] = pred_batch[:, :, : CONFIG['image_size'] // 2, :]
+    batch[:, :, CONFIG['image_size'] // 2 :, :] = target_batch[:, :, CONFIG['image_size'] // 2 :, :]
+    images = [ matrix_to_image(pred) for pred in batch ]
+    template = env.get_template('images.html')
+    html = template.render(images=images)
+    clear_output(wait=True)
+    display(HTML(html))
 
 
 # functions
@@ -42,19 +57,3 @@ def plot_brain(challenge_vec, subject, hem, roi=None):
         black_bg=True,
     )
     return view.resize(height=900, width=1200)
-
-# plot decodings
-def monitor_decoding(decodings, n=3):
-    """small multiple gifs of decodings at differnt stages of training"""
-    decodings = decodings[: n * n]
-    fig, axs = plt.subplots(n, n, figsize=(n * 2, n * 2))
-    for i, ax in enumerate(axs.flatten()):
-        ax.imshow(decodings[i])
-        ax.axis("off")
-    plt.tight_layout()
-    plt.close()
-    return fig
-
-
-def plot_decoding_progress():
-    pass
