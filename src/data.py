@@ -14,18 +14,18 @@ from src.utils import DATA_DIR, get_metadata_sources
 
 
 # functions
-def load_subject(subject: str, image_size: int=32) -> tuple: # currently only supports training split (not test split)
+def load_subject(subject: str, image_size: int=32, precision=jnp.float32) -> tuple:
     path = os.path.join(DATA_DIR, 'algonauts', subject, 'training_split')
     n_samples = len([f for f in os.listdir(os.path.join(path, 'training_images')) if f.endswith('.png')])
     train_idx, _ = train_test_split(np.arange(n_samples), test_size=0.2, random_state=42)
-    return load_split(path, train_idx, image_size, subject)
+    return load_split(path, train_idx, image_size, subject, precision=precision)
 
 
-def load_split(path: str, split_idx: int, image_size: int, subject: str) -> tuple:
+def load_split(path: str, split_idx: int, image_size: int, subject: str, precision) -> tuple:
     lh_fmri = np.load(os.path.join(path, 'training_fmri', 'lh_training_fmri.npy'))[split_idx]
     rh_fmri = np.load(os.path.join(path, 'training_fmri', 'rh_training_fmri.npy'))[split_idx]
     images, metadata = load_coco(path, split_idx, image_size, subject)
-    return lh_fmri, rh_fmri, images, metadata
+    return lh_fmri.astype(precision), rh_fmri.astype(precision), images.astype(precision), metadata
 
 
 def load_metadata(image_files: list, subject: str) -> list:

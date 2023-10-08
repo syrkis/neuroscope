@@ -14,7 +14,6 @@ from typing import List, Tuple, Dict
 from functools import partial
 from tqdm import tqdm
 from src.model import loss_fn, init, apply
-from src.plots import plot_small_multiples_html
 
 
 # functions
@@ -48,8 +47,6 @@ def train_loop(rng, opt, train_loader, val_loader, plot_batch, hyperparams):
             rng, key = jax.random.split(rng)
             metrics = evaluate(params, key, train_loader, val_loader)
             fold_metrics.append(metrics)
-            plot_pred = apply(params, key, plot_batch[0])
-            plot_small_multiples_html(plot_pred, plot_batch[2], metrics, hyperparams)
     return metrics, params
 
 

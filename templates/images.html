@@ -10,64 +10,54 @@
             width: 100%;
             height: 100%;
         }
-        .metrics {
-            /* all she be in one line */
-            display: flex;
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-        }
         .images {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 60px;
-            width: 1200px;
-            height: 1200px;
+            grid-template-columns: repeat({{n}}, 1fr);
+            gap: 20px;
+            width: 90%;
+            height: auto;
             margin: 0;
-            background-color: black;
-            padding: 60px;
+            background-color: {{ background }};
         }
         .image {
             display: flex;
             justify-content: center;
             align-items: center; 
         }
+        .info-bar {
+            text-align: center;
+            width: 100%;
+            font-size: 20px;
+        }
         ul {
-            /* all she be in one line */
-            margin: auto;
-            display: flex;
-            flex-direction: row;
+            list-style-type: none;
             margin: 0;
             padding: 0;
         }
-
         li {
-            list-style-type: none;
-            margin-right: 20px;
+            display: inline-block;
+            margin: 0 50px;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div class="metrics">
-            <ul>
-                <li> train_loss: {{ metrics.train_loss }} </li>
-                <li> val_loss: {{ metrics.val_loss }} </li>
-                <li> n_steps: {{ hyperparams.n_steps }} </li>
-                <li> batch_size: {{ hyperparams.batch_size }} </li>
-                <li> dropout: {{ hyperparams.dropout_rate }} </li>
-            </ul>
-        </div>
         <div class="images">
             {% for image in images %}
             <div class='image'>
                 <img src="data:image/png;base64,{{image}}" alt="image" width="100%" height="100%">
             </div>
             {% endfor %}
+        </div>
+        <div class="info-bar">
+            <ul>
+                {% for info in info_bar %}
+                    <li>
+                        <span>{{ info }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 </body>

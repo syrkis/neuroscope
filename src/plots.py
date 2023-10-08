@@ -18,23 +18,32 @@ from PIL import Image as PILImage
 from io import BytesIO
 from jinja2 import Template, Environment, FileSystemLoader
 from jax import vmap
+import darkdetect
 from src.fmri import ATLAS, fsaverage_vec
 from src.utils import matrix_to_image, CONFIG
 
 
 # globals
-plt.style.use("dark_background")
 env = Environment(loader=FileSystemLoader('templates'))
+template = env.get_template('images.html')
 
 
-def plot_small_multiples_html(pred_batch, target_batch, metrics, hyperparams, n_cols=3):
-    pred_batch, target_batch = np.array(pred_batch[: n_cols ** 2]), np.array(target_batch[: n_cols ** 2])
+
+def make_halves(pred_batch, target_batch):
+    pred_batch, target_batch = np.array(pred_batch), np.array(target_batch)
     batch = np.zeros_like(pred_batch)
-    batch[:, :, : CONFIG['image_size'] // 2, :] = pred_batch[:, :, : CONFIG['image_size'] // 2, :]
-    batch[:, :, CONFIG['image_size'] // 2 :, :] = target_batch[:, :, CONFIG['image_size'] // 2 :, :]
-    images = [ matrix_to_image(pred) for pred in batch ]
+    batch[:, :, : pred_batch.shape[1] // 2, :] = pred_batch[:, :, : pred_batch.shape[1] // 2, :]
+    batch[:, :, pred_batch.shape[1] // 2 :, :] = target_batch[:, :, pred_batch.shape[1] // 2 :, :]
+    return batch
+
+
+
+def plot_multiples(imgs, n=3, info_bar=None):
+    imgs = np.array(imgs[:n])
     template = env.get_template('images.html')
-    html = template.render(images=images, metrics=metrics, hyperparams=hyperparams)
+    imgs = [matrix_to_image(pred) for pred in imgs]
+    background = "dark" if darkdetect.isDark() else "white"
+    html = template.render(images=imgs, n=n, info_bar=info_bar if info_bar else [""], background=background)
     clear_output(wait=True)
     display(HTML(html))
 

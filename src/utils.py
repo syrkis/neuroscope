@@ -17,6 +17,7 @@ from matplotlib import pyplot as plt
 import yaml
 from IPython.display import display, HTML
 import time
+import jax
 import numpy as np
 import base64
 from PIL import Image as PILImage
@@ -38,7 +39,7 @@ CAPTIONS_DIR = os.path.join(DATA_DIR, 'coco', 'annotations', 'captions_train2017
 
 
 # CONSTANTS
-SUBJECTS = ['subj05', 'subj06', 'subj07', 'subj08']
+SUBJECTS = ['subj05']  # 'subj06', 'subj07', 'subj08']
 
 CLASS_TO_ROI = {"prf-visualrois":  ["V1v", "V1d", "V2v", "V2d", "V3v", "V3d", "hV4"],
                     "floc-bodies": ["EBA", "FBA-1", "FBA-2", "mTL-bodies"],
@@ -50,6 +51,11 @@ CLASS_TO_ROI = {"prf-visualrois":  ["V1v", "V1d", "V2v", "V2d", "V3v", "V3d", "h
 ROI_TO_CLASS = {roi: roi_class for roi_class, rois in CLASS_TO_ROI.items() for roi in rois}
 
 ROIS = [roi for roi_class in CLASS_TO_ROI.values() for roi in roi_class]
+
+
+# model stuff
+conv_kernel = lambda s, o, st, p: s - (o - 1) * st + 2 * p
+deconv_kernel = lambda s, o, st, p: (o - 1) * st + 1 - s + 2 * p
 
 
 # FUNCTIONS
@@ -89,8 +95,17 @@ def load_roi_data(subject):
 
 
 def matrix_to_image(matrix):
+        # ensure all values are [0; 1]
+        matrix = np.clip(matrix, 0, 1)
+        # if matrix is 128 x 128 x 1, convert to 128 x 128 x 3
+        matrix = np.repeat(matrix, 3, axis=2) if matrix.shape[2] == 1 else matrix
         image = PILImage.fromarray((matrix * 255).astype(np.uint8))
         image_bytes = BytesIO()
         image.save(image_bytes, format='png')
         encoded_image = base64.b64encode(image_bytes.getvalue()).decode('utf-8')
         return encoded_image
+
+
+def n_params(params):
+    # dictionary of parameters
+    return sum([np.prod(p.shape) for p in params.values().values()])
