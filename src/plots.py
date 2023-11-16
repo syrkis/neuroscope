@@ -24,9 +24,6 @@ from src.utils import matrix_to_image, CONFIG
 
 
 # globals
-env = Environment(loader=FileSystemLoader('templates'))
-template = env.get_template('images.html')
-
 
 
 def make_halves(pred_batch, target_batch):
