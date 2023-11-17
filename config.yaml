@@ -1,1 +1,11 @@
-image_size: 128
+image_size  : 28
+embed_dim   : 10
+batch_size  : 60
+kernel_size : 3
+channels    : 1
+stride      : 2
+layers      : 1
+lr          : 0.001
+epochs      : 10
+scale       : 0.01
+beta        : 0.0
