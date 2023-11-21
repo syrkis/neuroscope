@@ -14,6 +14,10 @@ from src.utils import DATA_DIR, get_metadata_sources
 
 
 # functions
+def load_subjects(subjects: list, image_size: int=32, precision=jnp.float32) -> dict:
+    return {subject: load_subject(subject, image_size, precision) for subject in subjects}
+    
+
 def load_subject(subject: str, image_size: int=32, precision=jnp.float32) -> tuple:
     path = os.path.join(DATA_DIR, 'algonauts', subject, 'training_split')
     n_samples = len([f for f in os.listdir(os.path.join(path, 'training_images')) if f.endswith('.png')])
@@ -74,7 +78,7 @@ def get_metadata(image_file: str, metadata_sources: tuple) -> tuple:
     return coco_id, categories, captions
 
 
-def make_batches(lh_fmri: list, rh_fmri: list, images: list , batch_size: int) -> tuple:
+def make_batches(lh_fmri: list, rh_fmri: list, images: list , subject_idx, batch_size: int, n_subjects: int) -> tuple:
     lh_fmri = np.array(lh_fmri)
     rh_fmri = np.array(rh_fmri)
     images = np.array(images)
@@ -82,20 +86,41 @@ def make_batches(lh_fmri: list, rh_fmri: list, images: list , batch_size: int) -
         perm = np.random.permutation(len(images) // batch_size * batch_size)
         for i in range(0, len(perm), batch_size):
             batch_perm = perm[i:i + batch_size]
-            lh_batch = jnp.array(lh_fmri[batch_perm])
-            rh_batch = jnp.array(rh_fmri[batch_perm])
-            image_batch = jnp.array(images[batch_perm])
-            yield lh_batch, rh_batch, image_batch
+            lh_batch = lh_fmri[batch_perm]
+            #expanded_lh = expand(lh_batch, subject_idx[batch_perm], n_subjects)
+            rh_batch = rh_fmri[batch_perm]
+            #expanded_rh = expand(rh_batch, subject_idx[batch_perm], n_subjects)
+            image_batch = images[batch_perm]
+            yield lh_batch, rh_batch, image_batch, subject_idx[batch_perm]
+
+""" def expand(A, v, k):
+    N, M = A.shape
+    B = jnp.zeros((N, M, k))
+    mask = jnp.arange(k) == v[:, None]
+    B = jnp.where(mask[:, None, :], A[:, :, None], B)
+    return B """
+
+def combine_subjects(subjects, cfg):
+    # subjects is a dict of (lh_fmri, rh_fmri, images) tuples
+    lh_fmri = np.concatenate([subject[0] for subject in subjects.values()])
+    rh_fmri = np.concatenate([subject[1] for subject in subjects.values()])
+    images = np.concatenate([subject[2] for subject in subjects.values()])
+    subject_idx = np.concatenate([np.ones(len(subject[0])) * i for i, subject in enumerate(subjects.values())])
+    return lh_fmri, rh_fmri, images, subject_idx
 
 
-def make_kfolds(subject: tuple, hyperparams: dict, n_splits: int=5) -> tuple:
-    lh_fmri, rh_fmri, images, _ = subject
+def make_kfolds(subjects_data, cfg, n_splits=5):
+    # subject data is a dict of (lh_fmri, rh_fmri, images) tuples
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
-    for train_idx, val_idx in kf.split(images):
-        train_lh, train_rh = lh_fmri[train_idx], rh_fmri[train_idx]
-        train_images = [images[i] for i in train_idx]
-        val_lh, val_rh = lh_fmri[val_idx], rh_fmri[val_idx]
-        val_images = [images[i] for i in val_idx]
-        train_batches = make_batches(train_lh, train_rh, train_images, hyperparams['batch_size'])
-        val_batches = make_batches(val_lh, val_rh, val_images, hyperparams['batch_size'])
+    combined_subjects = combine_subjects(subjects_data, cfg)
+    for fold in kf.split(combined_subjects[0]):
+        train_idx, val_idx = fold
+        train_lh, train_rh = combined_subjects[0][train_idx], combined_subjects[1][train_idx]
+        train_images = combined_subjects[2][train_idx]
+        train_subject_idx = combined_subjects[3][train_idx]
+        val_lh, val_rh = combined_subjects[0][val_idx], combined_subjects[1][val_idx]
+        val_images = combined_subjects[2][val_idx]
+        val_subject_idx = combined_subjects[3][val_idx]
+        train_batches = make_batches(train_lh, train_rh, train_images, train_subject_idx, cfg['batch_size'], len(subjects_data))
+        val_batches = make_batches(val_lh, val_rh, val_images, val_subject_idx, cfg['batch_size'], len(subjects_data))
         yield train_batches, val_batches
