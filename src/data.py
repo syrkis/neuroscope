@@ -79,7 +79,7 @@ def make_batches(lh_fmri: list, rh_fmri: list, images: list , batch_size: int) -
     rh_fmri = np.array(rh_fmri)
     images = np.array(images)
     while True:
-        perm = np.random.permutation(len(images))
+        perm = np.random.permutation(len(images) // batch_size * batch_size)
         for i in range(0, len(perm), batch_size):
             batch_perm = perm[i:i + batch_size]
             lh_batch = jnp.array(lh_fmri[batch_perm])

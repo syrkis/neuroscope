@@ -10,3 +10,4 @@ outputs/
 **/*.sif
 .vscode/
 results/
+figures/
