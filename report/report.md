@@ -1,5 +1,5 @@
 ---
-title: Decoding the Brain's Visual Encoding System Using Multimodal Deep Learning
+title: Decoding Cortex Using Mesh Convolutions Only
 author: Noah Syrkis
 geometry: margin=3cm
 fontsize: 12pt
@@ -7,10 +7,16 @@ date: \today
 ---
 
 ## Abstract
-pandoc list_2.md --bibliography=biblio.bib --citeproc -o list_2.pdf
-Understanding how the brain encodes visual information is a key challenge in neuroscience. In this project, we attempt to address this challenge by constructing a multimodal encoding model based on the Algonauts Project 2023 dataset. In addition to the dataset's image modality, we incorporate a semantic feature vector that describes object categories contained in the image shown to the subject during the functional Magnetic Resonance Imaging (fMRI) data collection. We combine various linear modules to construct two models: one predicting the fMRI data from both the associated image and the image's associated semantic feature vector; the other predicting both the fMRI data and the semantic vector from the image alone. Bayesian hyperparameter optimization suggests that the latter approach could potentially enhance model performance during inference without increasing the number of parameters. The model's performance was evaluated using a 5-fold cross-validation strategy and the median Pearson correlation coefficient as the metric. The code for this project is accessible at github.com/syrkis/neuroscope, and training logs are available at wandb.ai/syrkis/neuroscope.
+
+Understanding how the brain encodes visual information is a key challenge in neuroscience. In this project, we attempt to address this challenge by constructing a multimodal encoding model based on the Algonauts Project 2023 dataset. In addition to the dataset's image modality, we incorporate a semantic feature vector that describes object categories contained in the image shown to the subject during the functional Magnetic Resonance Imaging (fMRI) data collection. We combine various linear modules to construct two models: one predicting the fMRI data from both the associated image and the image's associated semantic feature vector; the other predicting both the fMRI data and the semantic vector from the image alone. Bayesian hyperparameter optimization suggests that the latter approach could potentially enhance model performance during inference without increasing the number of parameters. The model's performance was evaluated using a 5-fold cross-validation strategy and the median Pearson correlation coefficient as the metric. The code for this project is accessible at github.com/syrkis/neuroscope.
 
 ## Introduction
+
+Vision is the principal modality through which we interpret and interact with our environment. It is a cornerstone of human experience, profoundly influencing not only our perception of the external world but also the rich tapestry of our inner lives. The visual system is a conduit through which a significant portion of our cognitive processing occurs, shaping our understanding in a multitude of domains, often surpassing the influence of language in its scope and depth [@mccarthy2017].
+
+
+This report aims to dissect the intricate relationship between vision and cognition and to illuminate how this relationship is being reinterpreted and reshaped in the age of artificial intelligence (AI). We will explore how advancements in AI and machine learning, particularly in the field of neural networks, are not only mimicking human visual processing but also enabling machines to 'see' and 'understand' in ways that were once the sole province of biological entities. Through this exploration, we seek to unravel how these technological advancements are redefining our understanding of intelligence, perception, and the very nature of human-machine interaction.
+
 
 Visual processing is the principal modality through which we interact and decipher our environment. Over the years, substantial progress has been made in understanding how the brain processes visual information, with even surprising parallels observed between artificial and biological vision processing [Cite]. However, as reality can exhibit extraordinarily different visual fingerprints—from simple geometric shapes to complex landscapes and visual noise—any system capable of visual perception is necessarily complicated. Fully capturing this complexity and intricacy remains a challenge. It is this challenge that is the focus of the 2023 Algonauts Project^[[http://algonauts.csail.mit.edu/](http://algonauts.csail.mit.edu/)]. The Algonauts Project's 2023 dataset is based on the Natural Scenes Dataset (NSD), which couples images from the Common Objects in Context (COCO) dataset [@lin2015] with fMRI responses to those images from various participants.
 
@@ -18,7 +24,12 @@ Neuroimaging techniques like fMRI have facilitated valuable insights into the ne
 
 The experiment presented here explores how an additional modality might contribute to developing a model of the brain's visual encoding system, _without_ a large increase in complexity/parameter count. The additional modality used here is a semantic feature vector, derived from the COCO dataset, describing the object categories contained in each image. The two models we developed are tasked with 1) predicting the brain response given the image and knowledge of what is in the image, and 2) predicting the brain response and the semantic contents of the image. The second model is there as an additional source of potential confirmation of the usefulness of adding a second modality. The first model is the heart of our experiment, allowing us to explore the question: "_How does the inclusion of an additional modality have on the performance of a brain encoding model during inference?_" It is to attempt an answer to this question that we have constructed the two models and their corresponding unimodal baselines.
 
-## Literature review
+## Background
+
+Decoding of the visual cortex using fMRI was first done by @haxby2001. Their research focused on simple geometric objects and faces. The following two decades have seen steady advancement in the field. From something something blah blah to blah meh. The last few years has seen an explosion in research on this front. This can be explained by two developments:
+1. Perhaps most importantly, the Natural Scences Dataset was released for anyone to tinker with.
+2. Deep learning allows for fitting of previosuly infeasible complex functions to high dimensional domains (this includes images).
+Given the advent in DL, we see a lot of image generation stuff, so it is easy to make realistic looking things. Many approaches opt for both a semantic and a realism component. @gu2023 is an impressive example of such. What sets it appart is there use of mesh convolutions on spheres. The brain, being geometrically inflatable is isomorphic with the sphere.
 
 #### Visual information processing
 
@@ -132,162 +143,3 @@ It appears that including the semantic vector, and creating a multimodal model i
 \pagebreak
 
 ## Appendix
-
-### Appendix A
-
-![Subject 1 Left hemisphere correlations](../plots/left_hem.png)
-
-\pagebreak
-
-### Appendix B
-
-![Subject 3 Right hemisphere correlations](../plots/right_hem.png)
-
-\pagebreak
-
-### Appendix C
-
-|Name                |alpha                 |beta                | __val_lh_corr__       |val_rh_corr        |
-|-------------------------------:|---------------------:|-------------------:|------------------:|------------------:|
-|giddy-sweep-48      |0.031                 |0.347               |0.245              |0.251              |
-|avid-sweep-12       |0.051                 |0.223               |0.245              |0.23               |
-|woven-sweep-13      |0.046                 |0.082               |0.242              |0.215              |
-|solar-sweep-11      |0.076                 |0.167               |0.24               |0.226              |
-|leafy-sweep-18      |0.025                 |0.36                |0.235              |0.253              |
-|dainty-sweep-44     |0.044                 |0.018               |0.229              |0.224              |
-|effortless-sweep-47 |0.033                 |0.042               |0.228              |0.209              |
-|fresh-sweep-17      |0.034                 |0.072               |0.225              |0.177              |
-|silvery-sweep-41    |0.096                 |0.218               |0.225              |0.225              |
-|fresh-sweep-50      |0.014                 |0.211               |0.224              |0.209              |
-|generous-sweep-5    |0.072                 |0.294               |0.22               |0.22               |
-|autumn-sweep-16     |0.026                 |0.469               |0.218              |0.218              |
-|crimson-sweep-15    |0.08                  |0.41                |0.215              |0.202              |
-|skilled-sweep-45    |0.049                 |0.186               |0.215              |0.201              |
-|sandy-sweep-4       |0.057                 |0.473               |0.214              |0.177              |
-|fearless-sweep-7    |0.031                 |0.398               |0.213              |0.212              |
-|fanciful-sweep-20   |0.042                 |0.429               |0.212              |0.22               |
-|sunny-sweep-14      |0.029                 |0.353               |0.211              |0.2                |
-|genial-sweep-8      |0.07                  |0.488               |0.211              |0.195              |
-|colorful-sweep-43   |0.017                 |0.158               |0.206              |0.186              |
-|hardy-sweep-57      |0.007                 |0.126               |0.202              |0.198              |
-|glamorous-sweep-42  |0.025                 |0.201               |0.201              |0.185              |
-|dark-sweep-2        |0.012                 |0.391               |0.196              |0.18               |
-|likely-sweep-46     |0.056                 |0.067               |0.194              |0.184              |
-|pleasant-sweep-51   |0.051                 |0.004               |0.193              |0.171              |
-|pious-sweep-31      |0.065                 |0.347               |0.19               |0.223              |
-|cool-sweep-19       |0.027                 |0.152               |0.19               |0.223              |
-|hearty-sweep-1      |0.073                 |0.045               |0.189              |0.166              |
-|resilient-sweep-60  |0.049                 |0.061               |0.184              |0.175              |
-|super-sweep-10      |0.015                 |0.437               |0.183              |0.176              |
-|bright-sweep-34     |0.065                 |0.066               |0.181              |0.203              |
-|light-sweep-23      |0.092                 |0.191               |0.177              |0.165              |
-|firm-sweep-28       |0.044                 |0.117               |0.177              |0.172              |
-|volcanic-sweep-49   |0.0                   |0.412               |0.174              |0.179              |
-|breezy-sweep-6      |0.054                 |0.451               |0.173              |0.165              |
-|tough-sweep-22      |0.027                 |0.058               |0.173              |0.149              |
-|icy-sweep-9         |0.085                 |0.373               |0.173              |0.157              |
-|distinctive-sweep-30|0.083                 |0.084               |0.168              |0.166              |
-|decent-sweep-58     |0.09                  |0.499               |0.159              |0.148              |
-|true-sweep-3        |0.042                 |0.354               |0.157              |0.144              |
-|firm-sweep-59       |0.025                 |0.31                |0.155              |0.155              |
-|sweepy-sweep-56     |0.075                 |0.27                |0.153              |0.112              |
-|clean-sweep-27      |0.021                 |0.179               |0.151              |0.126              |
-|fallen-sweep-35     |0.042                 |0.078               |0.147              |0.163              |
-|celestial-sweep-36  |0.088                 |0.244               |0.146              |0.146              |
-|golden-sweep-55     |0.015                 |0.396               |0.146              |0.131              |
-|splendid-sweep-53   |0.048                 |0.07                |0.143              |0.149              |
-|efficient-sweep-26  |0.02                  |0.387               |0.143              |0.135              |
-|fiery-sweep-54      |0.04                  |0.442               |0.138              |0.139              |
-|firm-sweep-37       |0.056                 |0.275               |0.136              |0.131              |
-|rosy-sweep-38       |0.049                 |0.395               |0.134              |0.148              |
-|wandering-sweep-32  |0.025                 |0.249               |0.132              |0.149              |
-|twilight-sweep-40   |0.035                 |0.089               |0.127              |0.132              |
-|glorious-sweep-33   |0.021                 |0.422               |0.126              |0.135              |
-|dainty-sweep-52     |0.008                 |0.283               |0.124              |0.108              |
-|peach-sweep-25      |0.029                 |0.401               |0.115              |0.116              |
-|devoted-sweep-21    |0.093                 |0.412               |0.11               |0.1                |
-|true-sweep-24       |0.04                  |0.259               |0.107              |0.111              |
-|fancy-sweep-39      |0.004                 |0.083               |0.106              |0.105              |
-|radiant-sweep-29    |0.061                 |0.427               |0.104              |0.106              |
-
-Table: lh sweep log (sorted by lh corr).
-
-
-
-### Appendix D
-
-|Name                |alpha                 |beta                |val_lh_corr        | __val_rh_corr__        |
-|---------------------------:|---------------------:|-------------------:|------------------:|------------------:|
-|wobbly-sweep-19     |0.059                 |0.234               |0.273              |0.28               |
-|generous-sweep-49   |0.089                 |0.045               |0.234              |0.237              |
-|deep-sweep-9        |0.067                 |0.083               |0.216              |0.228              |
-|treasured-sweep-16  |0.088                 |0.379               |0.221              |0.228              |
-|quiet-sweep-11      |0.014                 |0.18                |0.225              |0.224              |
-|radiant-sweep-50    |0.003                 |0.429               |0.236              |0.223              |
-|splendid-sweep-7    |0.07                  |0.464               |0.236              |0.223              |
-|fallen-sweep-48     |0.057                 |0.486               |0.243              |0.222              |
-|genial-sweep-42     |0.038                 |0.037               |0.226              |0.221              |
-|misty-sweep-14      |0.053                 |0.224               |0.227              |0.22               |
-|rosy-sweep-17       |0.084                 |0.155               |0.215              |0.219              |
-|sweepy-sweep-34     |0.078                 |0.333               |0.193              |0.218              |
-|ancient-sweep-18    |0.007                 |0.011               |0.22               |0.216              |
-|major-sweep-45      |0.068                 |0.452               |0.223              |0.215              |
-|peach-sweep-12      |0.072                 |0.292               |0.222              |0.209              |
-|winter-sweep-47     |0.018                 |0.198               |0.211              |0.207              |
-|warm-sweep-25       |0.052                 |0.326               |0.203              |0.206              |
-|chocolate-sweep-46  |0.01                  |0.103               |0.202              |0.205              |
-|crisp-sweep-20      |0.095                 |0.02                |0.19               |0.203              |
-|effortless-sweep-44 |0.03                  |0.33                |0.236              |0.201              |
-|warm-sweep-41       |0.084                 |0.058               |0.212              |0.198              |
-|deep-sweep-10       |0.02                  |0.331               |0.21               |0.196              |
-|kind-sweep-4        |0.028                 |0.317               |0.207              |0.19               |
-|hearty-sweep-60     |0.057                 |0.383               |0.192              |0.186              |
-|solar-sweep-1       |0.034                 |0.302               |0.192              |0.186              |
-|absurd-sweep-43     |0.003                 |0.129               |0.206              |0.186              |
-|dry-sweep-58        |0.064                 |0.475               |0.169              |0.186              |
-|drawn-sweep-6       |0.028                 |0.346               |0.184              |0.185              |
-|decent-sweep-35     |0.097                 |0.225               |0.167              |0.184              |
-|worldly-sweep-5     |0.042                 |0.396               |0.172              |0.183              |
-|kind-sweep-54       |0.08                  |0.405               |0.175              |0.182              |
-|olive-sweep-31      |0.022                 |0.222               |0.158              |0.181              |
-|sparkling-sweep-3   |0.033                 |0.306               |0.194              |0.18               |
-|cosmic-sweep-37     |0.079                 |0.143               |0.155              |0.177              |
-|light-sweep-13      |0.058                 |0.253               |0.204              |0.177              |
-|devoted-sweep-57    |0.08                  |0.167               |0.177              |0.175              |
-|proud-sweep-8       |0.025                 |0.436               |0.197              |0.174              |
-|rural-sweep-53      |0.016                 |0.423               |0.192              |0.173              |
-|earnest-sweep-2     |0.071                 |0.16                |0.178              |0.172              |
-|visionary-sweep-36  |0.075                 |0.223               |0.16               |0.171              |
-|floral-sweep-30     |0.075                 |0.433               |0.169              |0.165              |
-|super-sweep-38      |0.048                 |0.035               |0.155              |0.165              |
-|astral-sweep-28     |0.044                 |0.285               |0.168              |0.163              |
-|neat-sweep-33       |0.026                 |0.006               |0.16               |0.162              |
-|jolly-sweep-40      |0.067                 |0.213               |0.15               |0.162              |
-|firm-sweep-59       |0.002                 |0.3                 |0.15               |0.16               |
-|cerulean-sweep-15   |0.055                 |0.489               |0.162              |0.159              |
-|lilac-sweep-27      |0.007                 |0.472               |0.177              |0.157              |
-|glad-sweep-56       |0.085                 |0.451               |0.16               |0.156              |
-|dandy-sweep-32      |0.089                 |0.048               |0.138              |0.151              |
-|glad-sweep-52       |0.06                  |0.463               |0.156              |0.149              |
-|valiant-sweep-22    |0.04                  |0.096               |0.13               |0.143              |
-|cerulean-sweep-51   |0.065                 |0.208               |0.142              |0.143              |
-|still-sweep-39      |0.046                 |0.062               |0.125              |0.142              |
-|smart-sweep-23      |0.023                 |0.036               |0.132              |0.139              |
-|youthful-sweep-55   |0.009                 |0.249               |0.134              |0.138              |
-|fresh-sweep-29      |0.02                  |0.416               |0.108              |0.129              |
-|driven-sweep-26     |0.079                 |0.167               |0.133              |0.125              |
-|autumn-sweep-24     |0.079                 |0.484               |0.125              |0.109              |
-|skilled-sweep-21    |0.041                 |0.338               |0.069              |0.086              |
-
-Table: rh sweep log (sorted by rh corr).
-
-### Appendix E
-
-
-| Hemisphere | $\alpha$ correlation | $\beta$ correlation |
-|------------|---------------------:|--------------------:|
-| Left       | 0.063                | - 0.147             |
-| Right      | 0.076                | - 0.087             |
-
-Table: Bayesian Hyperparameter Sweep (Model 1).
-
