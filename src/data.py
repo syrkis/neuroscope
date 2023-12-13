@@ -75,7 +75,7 @@ def get_metadata(image_file: str, metadata_sources: tuple) -> tuple:
     categories = [coco_instances.loadCats(category_id)[0]['name'] for category_id in category_ids]
     caption_ids = coco_captions.getAnnIds(imgIds=coco_id)
     captions = [annotation['caption'] for annotation in coco_captions.loadAnns(caption_ids)]
-    return coco_id, categories, captions
+    return coco_id, categories, captions, category_ids
 
 
 def make_batches(lh_fmri: list, rh_fmri: list, images: list , subject_idx, batch_size: int, n_subjects: int) -> tuple:

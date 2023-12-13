@@ -39,7 +39,7 @@ CAPTIONS_DIR = os.path.join(DATA_DIR, 'coco', 'annotations', 'captions_train2017
 
 
 # CONSTANTS
-SUBJECTS = ['subj05']  # 'subj06', 'subj07', 'subj08']
+SUBJECTS = ['subj05', 'subj06', 'subj07', 'subj08']
 
 CLASS_TO_ROI = {"prf-visualrois":  ["V1v", "V1d", "V2v", "V2d", "V3v", "V3d", "hV4"],
                     "floc-bodies": ["EBA", "FBA-1", "FBA-2", "mTL-bodies"],

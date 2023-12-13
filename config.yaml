@@ -1,41 +1,20 @@
 
 neuroscope:
   source      : img         # fmri or img
-  image_size  : 128          # only applicable to COCO (neuroscope) images
+  image_size  : 64          # only applicable to COCO (neuroscope) images
   embed_dim   : 256          # bottleneck size (latent space)
   batch_size  : 64
   in_chans    : 3           # number of input channels
-  chan_start  : 16           # number of output channels for first conv layer
-  conv_branch : 3           # number of branches for conv layers
-  kernel_size : 5           # 3 or 5
+  chan_start  : 24           # number of output channels for first conv layer
+  conv_branch : 2           # number of branches for conv layers
+  kernel_size : 3           # 3 or 5
   stride      : 2           # 1 or 2 or 4
   conv_layers : 4           # could be quite deep i think
   fc_layers   : 1           # should probably be 1
-  lr          : 0.003       # seems 0.001 is best even with batch norm
+  lr          : 0.001       # seems 0.001 is best even with batch norm
   epochs      : 50          # between 10 and 50
   batch_norm  : True        # True or False
   vae         : False       # True or False
   beta        : 0.5         # beta for beta-VAE
   loss_fn     : l1          # l1 or l2
-  dropout     : 0.1        # dropout rate for fc layers
-
-mnist:
-  source      : img         # fmri or img
-  image_size  : 28          # only applicable to COCO (neuroscope) images
-  embed_dim   : 64          # bottleneck size (latent space)
-  batch_size  : 32
-  in_chans    : 1           # number of input channels
-  chan_start  : 8           # number of output channels for first conv layer
-  conv_branch : 2           # number of branches for conv layers
-  kernel_size : 3           # 3 or 5
-  stride      : 2           # 1 or 2 or 4
-  conv_layers : 2           # could be quite deep i think
-  fc_layers   : 1           # should probably be 1
-  lr          : 0.003       # seems 0.001 is best even with batch norm
-  epochs      : 50          # between 10 and 50
-  batch_norm  : True        # True or False
-  vae         : True       # True or False
-  beta        : 0.5         # beta for beta-VAE
-  loss_fn     : l1          # l1 or l2
-  dropout     : 0.1        # dropout rate for fc layers
-#  optimizer   : adagrad     # adagrad or adam
+  dropout     : 0.0       # dropout rate for fc layers

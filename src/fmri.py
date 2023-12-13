@@ -6,6 +6,7 @@
 import os
 import numpy as np
 from nilearn import datasets
+from nilearn.surface import load_surf_mesh
 from src.utils import SUBJECTS, ROI_TO_CLASS, load_roi_data
 
 
@@ -41,3 +42,24 @@ def fsaverage_vec(challenge_vec, subject, roi, hem) -> np.ndarray:
         fsaverage_response = np.zeros(len(fsaverage_space))
         fsaverage_response[np.where(fsaverage_space)[0]] = challenge_vec
     return fsaverage_response
+
+
+def get_bold_with_coords_and_faces(challenge_vec, subject, hem, roi=None):
+    """
+    Return the BOLD signal data along with corresponding coordinates and faces on the brain surface.
+    """
+    # Get the fsaverage vector corresponding to the challenge_vec
+    fsaverage_response = fsaverage_vec(challenge_vec, subject, roi, hem)
+
+    # Determine the hemisphere to select the correct mesh
+    side = "infl_left" if hem == "lh" else "infl_right"
+
+    # Load the coordinates and faces for the selected hemisphere
+    coords, faces = load_surf_mesh(ATLAS[side])
+
+    # Filter the coordinates based on the fsaverage_response
+    # Only include coordinates where there is a non-zero response
+    filtered_coords = coords[np.where(fsaverage_response)[0]]
+
+    # Return the filtered coordinates, corresponding BOLD signal values, and faces
+    return filtered_coords, fsaverage_response[np.where(fsaverage_response)[0]], faces
