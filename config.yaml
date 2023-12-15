@@ -9,7 +9,7 @@ neuroscope:
   conv_branch : 2           # number of branches for conv layers
   kernel_size : 3           # 3 or 5
   stride      : 2           # 1 or 2 or 4
-  gcn_layers  : 5           # 2 or 3
+  gcn_layers  : 4           # 2 or 3
   conv_layers : 5           # could be quite deep i think
   fc_layers   : 1           # should probably be 1
   lr          : 0.001       # seems 0.001 is best even with batch norm

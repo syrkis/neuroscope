@@ -4,7 +4,7 @@ title: Neuroscope
 
 # Introduction
 
-Mesh something
+- Reconstructing visual impressions from
 
 ---
 
