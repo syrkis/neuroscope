@@ -2,14 +2,15 @@
 neuroscope:
   source      : img         # fmri or img
   image_size  : 64          # only applicable to COCO (neuroscope) images
-  embed_dim   : 256          # bottleneck size (latent space)
+  latent_dim  : 128          # bottleneck size (latent space)
   batch_size  : 64
-  in_chans    : 3           # number of input channels
-  chan_start  : 24           # number of output channels for first conv layer
+  in_chans    : 1           # number of input channels
+  chan_start  : 32           # number of output channels for first conv layer
   conv_branch : 2           # number of branches for conv layers
   kernel_size : 3           # 3 or 5
   stride      : 2           # 1 or 2 or 4
-  conv_layers : 4           # could be quite deep i think
+  gcn_layers  : 5           # 2 or 3
+  conv_layers : 5           # could be quite deep i think
   fc_layers   : 1           # should probably be 1
   lr          : 0.001       # seems 0.001 is best even with batch norm
   epochs      : 50          # between 10 and 50

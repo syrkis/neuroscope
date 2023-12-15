@@ -29,7 +29,7 @@ def load_split(path: str, split_idx: int, image_size: int, subject: str, precisi
     lh_fmri = np.load(os.path.join(path, 'training_fmri', 'lh_training_fmri.npy'))[split_idx]
     rh_fmri = np.load(os.path.join(path, 'training_fmri', 'rh_training_fmri.npy'))[split_idx]
     images, metadata = load_coco(path, split_idx, image_size, subject)
-    return lh_fmri.astype(precision), rh_fmri.astype(precision), images.astype(precision), metadata
+    return jnp.array(lh_fmri), jnp.array(rh_fmri), jnp.array(images) # , metadata
 
 
 def load_metadata(image_files: list, subject: str) -> list:
