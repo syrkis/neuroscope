@@ -9,12 +9,10 @@ import cv2
 import jax.numpy as jnp
 import numpy as np
 import pandas as pd
-from einops import rearrange
 from nilearn import datasets, plotting
 from nilearn.surface import load_surf_mesh
 from pycocotools.coco import COCO
 from tqdm import tqdm
-from sklearn.datasets import fetch_openml
 from cachier import cachier
 
 import neuroscope.utils as utils
@@ -191,6 +189,6 @@ def plot_fn(data, subj, roi, hem, idx):
 
 
 # @cache
-def mnist_fn():
-    mnist = jnp.array(fetch_openml("mnist_784", version=1).data.to_numpy())  # type: ignore
-    return rearrange(mnist, "s (h w c) -> s c h w", h=28, w=28, c=1) / 255.0
+# def mnist_fn():
+# mnist = jnp.array(fetch_openml("mnist_784", version=1).data.to_numpy())  # type: ignore
+# return rearrange(mnist, "s (h w c) -> s c h w", h=28, w=28, c=1) / 255.0
