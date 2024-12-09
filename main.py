@@ -67,3 +67,7 @@ cfg = ns.utils.Config()
 opt = optax.adamw(cfg.lr)
 rng = random.PRNGKey(0)
 data = ns.data.subject_fn(cfg)
+
+# %%
+coords, faces, bolds = ns.fmri.mesh_fn(data, cfg.subj, cfg.roi, cfg.hem, 0)
+ns.fmri.plot_fn(data, cfg.subj, cfg.roi, cfg.hem, 0)

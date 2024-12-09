@@ -9,8 +9,6 @@ import cv2
 import jax.numpy as jnp
 import numpy as np
 import pandas as pd
-from nilearn import datasets, plotting
-from nilearn.surface import load_surf_mesh
 from pycocotools.coco import COCO
 from tqdm import tqdm
 from cachier import cachier
@@ -18,7 +16,6 @@ from cachier import cachier
 import neuroscope.utils as utils
 
 # %% Constants
-ATLAS = datasets.fetch_surf_fsaverage("fsaverage")
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath("__file__")), "data")
 COCO_DIR = os.path.join(DATA_DIR, "coco", "annotations")
 INSTANCES_DIR = os.path.join(COCO_DIR, "instances_train2017.json")
@@ -141,7 +138,7 @@ def coco_fn(cfg):
     annot_ids = [coco_inst.getAnnIds(imgIds=coco_id) for coco_id in coco_ids]
     anots = [coco_inst.loadAnns(annot_id) for annot_id in annot_ids]
     cats = np.zeros((len(image_files), 90))  # largest cat id is 90 (starting at 0
-    for idx, anot in enumerate(tqdm(anots)):
+    for idx, anot in enumerate(anots):
         cats[idx] = (
             np.array(  # minus 1 to make id start at 0 (will cause bug in future)
                 [np.eye(cats.shape[1])[np.array(a["category_id"] - 1)] for a in anot]
@@ -149,46 +146,3 @@ def coco_fn(cfg):
         )
     coco = utils.COCO(imgs=imgs, meta=jnp.array(cats))
     return coco
-
-
-def fsa_fn(data: utils.Subject, subj, roi, hem, idx):
-    class_name, roi_id = roi_fn(data, roi)
-    fsa = data.__getattribute__(hem).mask.fsa[class_name] == roi_id
-    cha = data.__getattribute__(hem).bold[
-        :, data.__getattribute__(hem).mask.cha[class_name] == roi_id
-    ]
-    return jnp.zeros(fsa.size).at[fsa].set(cha[idx])
-
-
-def mesh_fn(data, subj, roi, hem, idx):
-    side = "left" if hem == "lh" else "right"
-    coords, faces = load_surf_mesh(ATLAS["flat_" + side])
-    fsa = fsa_fn(data, subj, roi, hem, idx)  # bold in fsa
-    index = (-jnp.ones_like(fsa)).at[fsa != 0].set(jnp.arange(len(coords[fsa != 0])))
-    faces = index[faces][np.all(index[faces] != -1, axis=1)]
-    return coords[fsa != 0][:, :2], faces.astype(jnp.int32), fsa[fsa != 0]
-
-
-def roi_fn(data: utils.Subject, roi: str):
-    class_name = [k for k, v in data.maps.items() if roi in v.values()][0]
-    roi_id = [k for k, v in data.maps[class_name].items() if v == roi][0]
-    return class_name, roi_id
-
-
-def plot_fn(data, subj, roi, hem, idx):
-    fsa = np.array(fsa_fn(data, subj, roi, hem, idx))
-    side = "left" if hem == "lh" else "right"
-    view = plotting.view_surf(
-        surf_mesh=ATLAS["pial_" + side],
-        surf_map=fsa,
-        bg_map=ATLAS["sulc_" + side],
-        cmap="twilight_shifted",
-        black_bg=True,
-    )
-    return view.open_in_browser()
-
-
-# @cache
-# def mnist_fn():
-# mnist = jnp.array(fetch_openml("mnist_784", version=1).data.to_numpy())  # type: ignore
-# return rearrange(mnist, "s (h w c) -> s c h w", h=28, w=28, c=1) / 255.0
