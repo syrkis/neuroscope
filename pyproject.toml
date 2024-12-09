@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "neuroscope"
+version = "0.1.0"
+description = ""
+authors = ["Noah Syrkis <noah@syrkis.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11,<3.12"
+jraph = "^0.0.6.dev0"
+ipykernel = "^6.29.5"
+tqdm = "^4.67.1"
+nilearn = "^0.11.0"
+jupyterlab = "^4.3.2"
+ipython = "^8.30.0"
+setuptools = "^75.6.0"
+wheel = "^0.45.1"
+cython = "<3"
+pycortex = "^1.2.10"
+opencv-python = "^4.10.0.84"
+pycocotools = "^2.0.8"
+optax = "^0.2.4"
+jaxtyping = "^0.2.36"
+einops = "^0.8.0"
+jax-tqdm = "^0.3.1"
+iprogress = "^0.4"
+ipywidgets = "^8.1.5"
+seaborn = "^0.13.2"
+aim = "^3.26.1"
+jax = "0.4.35"
+esch = ">=0.5.5"
+cachier = "^3.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
