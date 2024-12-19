@@ -8,8 +8,15 @@ import optax
 from einops import rearrange
 from jax import lax, random, value_and_grad
 from jax_tqdm import scan_tqdm
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+from functools import partial
+import jraph
+import networkx as nx
 
 import neuroscope as ns
+
+# %%
 
 
 # %% Functions
@@ -27,7 +34,6 @@ def grad_fn(apply_fn):
 
 
 def update_fn(grad):
-    # @jit
     def aux(state, x):
         params, opt_state = state
         loss, grads = grad(params, x)
@@ -45,7 +51,7 @@ def batch_fn(key, cfg, data):
     return rearrange(data[idxs], "(s b) ... -> s b ...", b=cfg.batch_size)
 
 
-def train_fn(rng, cfg, opt, data):  # using double memory
+def train_fn(rng, cfg, opt, data):
     params = ns.model.init_fn(rng, cfg)
     state = (params, opt.init(params))  # type: ignore
     update = update_fn(grad_fn(ns.model.apply_fn))
@@ -68,6 +74,43 @@ opt = optax.adamw(cfg.lr)
 rng = random.PRNGKey(0)
 data = ns.data.subject_fn(cfg)
 
+
 # %%
-coords, faces, bolds = ns.fmri.mesh_fn(data, cfg.subj, cfg.roi, cfg.hem, 0)
-ns.fmri.plot_fn(data, cfg.subj, cfg.roi, cfg.hem, 0)
+def networkx_to_jraph(graph):
+    pass
+
+
+def graph_fn(data, cfg, idx):
+    coords, faces, bolds = ns.fmri.mesh_fn(data, cfg, idx)
+    nodes = {"bold": bolds, "pos": coords}
+    senders = jnp.concat([faces[:, 0], faces[:, 1], faces[:, 2]])
+    receivers = jnp.concat([faces[:, 1], faces[:, 2], faces[:, 0]])
+    edges = jnp.ones_like(senders)
+    n_node = jnp.array([len(nodes)])
+    n_edge = jnp.array([faces.shape[0]])
+    globals = jnp.array([[1]])
+    graph = jraph.GraphsTuple(
+        nodes=nodes,
+        senders=senders,
+        receivers=receivers,
+        edges=edges,
+        globals=globals,
+        n_node=n_node,
+        n_edge=n_edge,
+    )
+    return graph
+
+
+def jraph_to_networkx(graph):
+    G = nx.Graph()
+    G.add_nodes_from(range(graph.n_node.item()))
+    G.add_edges_from(
+        zip(graph.senders.squeeze().tolist(), graph.receivers.squeeze().tolist())
+    )
+    return G
+
+
+graphs = jraph.batch(list(map(partial(graph_fn, data, cfg), tqdm(range(100)))))
+
+# %%
+graphs.nodes["bold"].shape, graphs.edges.shape

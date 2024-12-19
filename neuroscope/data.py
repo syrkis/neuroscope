@@ -1,5 +1,5 @@
 # data.py
-#     neuroscope project
+#     functions for loading coco, fmri, mask etc.
 # by: Noah Syrkis
 
 # imports

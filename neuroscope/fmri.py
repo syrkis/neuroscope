@@ -15,19 +15,19 @@ ATLAS = datasets.fetch_surf_fsaverage("fsaverage")
 
 
 # %% Functions
-def fsa_fn(data: utils.Subject, subj, roi, hem, idx):
-    class_name, roi_id = roi_fn(data, roi)
-    fsa = data.__getattribute__(hem).mask.fsa[class_name] == roi_id
-    cha = data.__getattribute__(hem).bold[
-        :, data.__getattribute__(hem).mask.cha[class_name] == roi_id
+def fsa_fn(data: utils.Subject, cfg, idx):
+    class_name, roi_id = roi_fn(data, cfg.roi)
+    fsa = data.__getattribute__(cfg.hem).mask.fsa[class_name] == roi_id
+    cha = data.__getattribute__(cfg.hem).bold[
+        :, data.__getattribute__(cfg.hem).mask.cha[class_name] == roi_id
     ]
     return jnp.zeros(fsa.size).at[fsa].set(cha[idx])
 
 
-def mesh_fn(data, subj, roi, hem, idx):
-    side = "left" if hem == "lh" else "right"
+def mesh_fn(data, cfg, idx):
+    side = "left" if cfg.hem == "lh" else "right"
     coords, faces = load_surf_mesh(ATLAS["flat_" + side])
-    fsa = fsa_fn(data, subj, roi, hem, idx)  # bold in fsa
+    fsa = fsa_fn(data, cfg, idx)  # bold in fsa
     index = (-jnp.ones_like(fsa)).at[fsa != 0].set(jnp.arange(len(coords[fsa != 0])))
     faces = index[faces][np.all(index[faces] != -1, axis=1)]
     return coords[fsa != 0][:, :2], faces.astype(jnp.int32), fsa[fsa != 0]
@@ -39,9 +39,9 @@ def roi_fn(data: utils.Subject, roi: str):
     return class_name, roi_id
 
 
-def plot_fn(data, subj, roi, hem, idx):
-    fsa = np.array(fsa_fn(data, subj, roi, hem, idx))
-    side = "left" if hem == "lh" else "right"
+def plot_fn(data, cfg, idx):
+    fsa = np.array(fsa_fn(data, cfg, idx))
+    side = "left" if cfg.hem == "lh" else "right"
     view = plotting.view_surf(
         surf_mesh=ATLAS["pial_" + side],
         surf_map=fsa,
