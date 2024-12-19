@@ -30,9 +30,16 @@ aim = "^3.26.1"
 jax = "0.4.35"
 esch = ">=0.5.5"
 cachier = "^3.1.2"
-e3nn-jax = {git = "https://github.com/e3nn/e3nn-jax.git"}
+e3nn-jax = { git = "https://github.com/e3nn/e3nn-jax.git" }
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff]
+line-length = 120
