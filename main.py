@@ -8,15 +8,11 @@ import optax
 from einops import rearrange
 from jax import lax, random, value_and_grad, vmap
 from jax_tqdm import scan_tqdm
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 from functools import partial
 import jraph
 import networkx as nx
 
 import neuroscope as ns
-
-# %%
 
 
 # %% Functions
@@ -74,10 +70,6 @@ data = ns.data.subject_fn(cfg)
 
 
 # %%
-def networkx_to_jraph(graph):
-    pass
-
-
 @vmap
 def graph_fn(coords, faces, bolds):
     nodes = coords
@@ -90,6 +82,7 @@ def graph_fn(coords, faces, bolds):
     return nodes, senders, receivers, edges, globals, n_node, n_edge
 
 
+# %%
 def jraph_to_networkx(graph):
     G = nx.Graph()
     G.add_nodes_from(range(graph.n_node.item()))
@@ -98,23 +91,20 @@ def jraph_to_networkx(graph):
 
 
 # %%
-def update_node_fn(node, sender, receiver, globals):
+def node_fn(node, sender, receiver, globals):
     return node
 
 
-def update_edge_fn(edge, sender, receiver, globals):
+def edge_fn(edge, sender, receiver, globals):
     return edge
 
 
-def update_global_fn(node, edge, globals):
+def global_fn(node, edge, globals):
     return globals
 
 
-model = jraph.GraphNetwork(
-    update_node_fn=update_node_fn, update_edge_fn=update_edge_fn, update_global_fn=update_global_fn
-)
-
-
+# %% Test
+model = jraph.GraphNetwork(update_node_fn=node_fn, update_edge_fn=edge_fn, update_global_fn=global_fn)
 coords, faces, bolds = map(jnp.array, zip(*tuple(map(partial(ns.fmri.mesh_fn, data, cfg), range(2)))))
 args = graph_fn(coords, faces, bolds)
 graphs = jraph.GraphsTuple(*args)
