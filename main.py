@@ -3,14 +3,17 @@
 # by: Noah Syrkis
 
 # Imports
+from functools import partial
+
+import esch
 import jax.numpy as jnp
+import jraph
+from tqdm import tqdm
+import networkx as nx
 import optax
 from einops import rearrange
 from jax import lax, random, value_and_grad, vmap
 from jax_tqdm import scan_tqdm
-from functools import partial
-import jraph
-import networkx as nx
 
 import neuroscope as ns
 
@@ -105,7 +108,13 @@ def global_fn(node, edge, globals):
 
 # %% Test
 model = jraph.GraphNetwork(update_node_fn=node_fn, update_edge_fn=edge_fn, update_global_fn=global_fn)
-coords, faces, bolds = map(jnp.array, zip(*tuple(map(partial(ns.fmri.mesh_fn, data, cfg), range(2)))))
+coords, faces, bolds = map(jnp.array, zip(*tuple(map(partial(ns.fmri.mesh_fn, data, cfg), tqdm(range(100))))))
 args = graph_fn(coords, faces, bolds)
 graphs = jraph.GraphsTuple(*args)
 tmp = vmap(model)(graphs)
+
+# %%
+# jnp.save("bolds.npy", bolds)
+# jnp.save("coords.npy", coords)
+esch.mesh(jnp.abs(bolds) + 1, coords[0], path="test.svg", shp="circle")
+esch.mesh(tmp.nodes, coords[0], path="tmp.svg", shp="circle")

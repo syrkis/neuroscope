@@ -12,3 +12,4 @@ outputs/
 .vscode/
 results/
 figures/
+*.svg
