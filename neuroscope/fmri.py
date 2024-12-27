@@ -23,7 +23,7 @@ def fsa_fn(data: utils.Subject, cfg, idx):
     return jnp.zeros(fsa.size).at[fsa].set(cha[idx])
 
 
-@cachier()
+# @cachier()
 def mesh_fn(data, cfg, idx):
     side = "left" if cfg.hem == "lh" else "right"
     coords, faces = load_surf_mesh(ATLAS["flat_" + side])

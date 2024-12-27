@@ -5,14 +5,13 @@
 # Imports
 from functools import partial
 
+from chex import dataclass
 import esch
 import jax.numpy as jnp
 import jraph
-from tqdm import tqdm
-import networkx as nx
 import optax
 from einops import rearrange
-from jax import lax, random, value_and_grad, vmap
+from jax import lax, random, value_and_grad, vmap, tree
 from jax_tqdm import scan_tqdm
 
 import neuroscope as ns
@@ -44,7 +43,9 @@ def update_fn(grad):
 
 
 def batch_fn(key, cfg, data):
-    idxs = random.permutation(key, jnp.arange(data.shape[0]))[: (data.shape[0] // cfg.batch_size) * cfg.batch_size]
+    idxs = random.permutation(key, jnp.arange(data.shape[0]))[
+        : (data.shape[0] // cfg.batch_size) * cfg.batch_size
+    ]
     return rearrange(data[idxs], "(s b) ... -> s b ...", b=cfg.batch_size)
 
 
@@ -66,55 +67,43 @@ def train_fn(rng, cfg, opt, data):
 
 
 # %%
-cfg = ns.utils.Config()
-opt = optax.adamw(cfg.lr)
-rng = random.PRNGKey(0)
-data = ns.data.subject_fn(cfg)
-
-
-# %%
 @vmap
-def graph_fn(coords, faces, bolds):
-    nodes = coords
-    senders = jnp.concat([faces[:, 0], faces[:, 1], faces[:, 2]])
+def graph_fn(nodes, faces, bolds):  # nodes are also coords
+    senders = jnp.concat([faces[:, 0], faces[:, 1], faces[:, 2]])[..., None]
     receivers = jnp.concat([faces[:, 1], faces[:, 2], faces[:, 0]])
-    edges = jnp.ones_like(senders)
-    n_node = jnp.array([len(nodes)])
-    n_edge = jnp.array([faces.shape[0]])
-    globals = jnp.array([[1, 2, 44343, 4]])
+    edges = jnp.ones_like(senders.squeeze())
+    n_node, n_edge, globals = jnp.array([len(nodes)]), jnp.array([len(edges)]), None
     return nodes, senders, receivers, edges, globals, n_node, n_edge
 
 
 # %%
-def jraph_to_networkx(graph):
-    G = nx.Graph()
-    G.add_nodes_from(range(graph.n_node.item()))
-    G.add_edges_from(zip(graph.senders.squeeze().tolist(), graph.receivers.squeeze().tolist()))
-    return G
+def agg_fn(a, b, c):
+    return a
+
+
+def model_fn(params, g):
+    nodes = g.nodes @ params.w
+    nodes = tree.map(lambda x: agg_fn(x[g.senders], g.receivers, g.n_node), nodes)
+    return g._replace(nodes=nodes)
+
+
+@dataclass
+class Params:
+    w: jnp.ndarray
 
 
 # %%
-def node_fn(node, sender, receiver, globals):
-    return node
+cfg = ns.utils.Config()
+opt = optax.adamw(cfg.lr)
+rng = random.PRNGKey(0)
+data = ns.data.subject_fn(cfg)
+args = map(jnp.array, zip(*tuple(map(partial(ns.fmri.mesh_fn, data, cfg), range(10)))))
+graphs = jraph.GraphsTuple(*graph_fn(*args))
+params = Params(w=random.normal(rng, (2, 7)))
+tmp = vmap(partial(model_fn, params))(graphs)
+tmp.nodes.shape
 
-
-def edge_fn(edge, sender, receiver, globals):
-    return edge
-
-
-def global_fn(node, edge, globals):
-    return globals
-
-
-# %% Test
-model = jraph.GraphNetwork(update_node_fn=node_fn, update_edge_fn=edge_fn, update_global_fn=global_fn)
-coords, faces, bolds = map(jnp.array, zip(*tuple(map(partial(ns.fmri.mesh_fn, data, cfg), tqdm(range(100))))))
-args = graph_fn(coords, faces, bolds)
-graphs = jraph.GraphsTuple(*args)
-tmp = vmap(model)(graphs)
 
 # %%
-# jnp.save("bolds.npy", bolds)
-# jnp.save("coords.npy", coords)
-esch.mesh(jnp.abs(bolds) + 1, coords[0], path="test.svg", shp="circle")
-esch.mesh(tmp.nodes, coords[0], path="tmp.svg", shp="circle")
+# model = jraph.GraphConvolution(update_node_fn=node_fn)  # , aggregate_nodes_fn=a
+# dwg = esch.mesh(jnp.abs(bolds.T), coords[0][:, [1, 0]], shp="rect", path="tmp.svg")
