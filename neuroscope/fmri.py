@@ -5,7 +5,6 @@
 # Imports
 import jax.numpy as jnp
 import numpy as np
-from cachier import cachier
 from nilearn import datasets, plotting
 from nilearn.surface import load_surf_mesh
 
@@ -19,7 +18,9 @@ ATLAS = datasets.fetch_surf_fsaverage("fsaverage")
 def fsa_fn(data: utils.Subject, cfg, idx):
     class_name, roi_id = roi_fn(data, cfg.roi)
     fsa = data.__getattribute__(cfg.hem).mask.fsa[class_name] == roi_id
-    cha = data.__getattribute__(cfg.hem).bold[:, data.__getattribute__(cfg.hem).mask.cha[class_name] == roi_id]
+    cha = data.__getattribute__(cfg.hem).bold[
+        :, data.__getattribute__(cfg.hem).mask.cha[class_name] == roi_id
+    ]
     return jnp.zeros(fsa.size).at[fsa].set(cha[idx])
 
 

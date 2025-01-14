@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: neuroscope
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Noah
+    family-names: Syrkis
+    orcid: 'https://orcid.org/0000-0002-6553-1115'
+identifiers:
+  - type: url
+    value: 'https://github.com/syrkis/neuroscope'
+    description: Git Repository
+keywords:
+  - Mechanistic Interpretability
+  - Deep Learning
+  - Neuroscience
+  - Brain Imaging
+  - Graph Neural Networks
+license: GPL-3.0
+date-released: '2024-11-29'

@@ -6,7 +6,8 @@
 from functools import partial
 
 from chex import dataclass
-import esch
+
+# import esch
 import jax.numpy as jnp
 import jraph
 import optax
